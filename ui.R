@@ -35,24 +35,25 @@ library(ggplot2)
 ui <- page_navbar(title ="Survival Functions", bg = "#ffd800",
                   nav_panel(title="Weibull", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("D", "Duration of study", 5),
-                              numericInput("f", "Frequency of observation", 1),
-                              numericInput("omega", "Omega (proportion of subjects who drop out at some point)", .3, min = 0, max = 1),
-                              numericInput("gamma", "Gamma (if >1, dropout occurs more at the end of the study. if <1, dropout occurs more at the beginning of the study.)", 3, min = 0, max = 100),
-                              submitButton("Create Graphs")
+                              numericInput("D1", "Duration of study", 5),
+                              numericInput("f1", "Frequency of observation", 1),
+                              numericInput("omega1", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma", "Gamma", 3, min = 0, max = 100, step = .5)
                             ),
-                            plotOutput(outputId = "weibullplots", width="50%"),
-                            textOutput(outputId = "weibullinfo"))),
+                            fluidRow(column(width=6, plotOutput(outputId = "weibullplots")),
+                                     column(width=6, textOutput(outputId = "weibullinfo")))
+                            )),
                   
                   nav_panel(title="Exponential",
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("D", "Duration of study", 5),
-                              numericInput("f", "Frequency of observation", 1),
-                              numericInput("omega", "Omega (proportion of subjects who drop out at some point)", .3, min = 0, max = 1)
+                              numericInput("D2", "Duration of study", 5),
+                              numericInput("f2", "Frequency of observation", 1),
+                              numericInput("omega2", "Omega", .5, min = 0, max = 1, step = .1)
                             ),
-                            plotOutput(outputId = "exponentialplots", width="50%"),
-                            textOutput(outputId = "exponentialinfo"))
-                            ),
+                            fluidRow(column(width=6, plotOutput(outputId = "exponentialplots")),
+                                     column(width=6, textOutput(outputId = "exponentialinfo")))
+                            )),
+                  
                   nav_panel(title="Something else", p("content of page 3")),
                   nav_spacer()
 )
