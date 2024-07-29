@@ -34,7 +34,6 @@ bf.hand <- function(N, est, sigma, hypothesis, fraction=1) {
   }
   
   # Compute the complexity (c) for inequalities
-  c <- 1
   if(!is.null(Rmat.ineq) && nrow(Rmat.ineq) > 0) {
     c <- mvtnorm::pmvnorm(lower=lower, upper=upper,
                           mean=rep(0, length(constr)), 
@@ -43,7 +42,6 @@ bf.hand <- function(N, est, sigma, hypothesis, fraction=1) {
   }
   
   # Compute the fit (f) for inequalities
-  f <- 1
   if(!is.null(Rmat.ineq) && nrow(Rmat.ineq) > 0) {
     if(any(constr == "<")) {
       est_adjusted <- -est

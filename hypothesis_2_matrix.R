@@ -53,7 +53,7 @@ hyp2mat <- function(hypothesis) {
   list(Ineq.mat = Ineq.mat, Eq.mat = Eq.mat)
 }
 
-# Example usage
+  # Example usage
 hypothesis1 <- "a>b=c<d"
 hypothesis2 <- "a=b=c"
 hypothesis3 <- "a1>a2<a3"
