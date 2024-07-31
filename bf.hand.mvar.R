@@ -1,73 +1,97 @@
-# Function to calculate the BFu analytically for informative hypotheses
-# bf.hand requires the function "hyp2mat" to be loaded into environment 
-# WARNING: bf.hand cannot yet handle hypotheses with heterogeneous constraints!
 
-bf.hand <- function(N, est, sigma, hypothesis, fraction=1) {
+bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
   
-  # Add spaces around inequality signs if they are not present
-  hypothesis <- gsub("([>=<])", " \\1 ", hypothesis)
-  # Remove any extra spaces that may have been introduced
-  hypothesis <- gsub("\\s+", " ", hypothesis)
-  # Trim leading and trailing spaces
-  hypothesis <- trimws(hypothesis)
-  
+  hypothesis <- gsub("([>=<])", " \\1 ", hypothesis) # Add spaces
+  hypothesis <- gsub("\\s+", " ", hypothesis) # Remove any extra spaces
+  hypothesis <- trimws(hypothesis) # Trim leading and trailing spaces
+
   b <- fraction/N
   struc <- unlist(strsplit(hypothesis, " "))
   params <- struc[seq(1, length(struc), 2)]
-  constr <- struc[seq(2, length(struc)-1, 2)]
+  constr <- struc[seq(2, length(struc) - 1, 2)]
+  ineq.constr <- constr[constr == "<" | constr == ">"]
+  eq.constr <- constr[constr == "="]
   
   # Contrast matrix
   Rmat <- hyp2mat(hypothesis = hypothesis)
-  Rmat.ineq <- Rmat$Ineq.mat
-  Rmat.eq <- Rmat$Eq.mat
+  Rmat_ineq <- Rmat$Ineq.mat
+  Rmat_eq <- Rmat$Eq.mat
   
-  # Define bounds for inequalities
-  lower <- rep(-Inf, length(constr))
-  upper <- rep(Inf, length(constr))
-  
-  # Assign bounds based on inequality constraints
-  if(any(constr == ">")) {
-    lower[constr == ">"] <- 0
-  }
-  if(any(constr == "<")) {
-    upper[constr == "<"] <- 0
-  }
-  
-  # Compute the complexity (c) for inequalities
-  if(!is.null(Rmat.ineq) && nrow(Rmat.ineq) > 0) {
-    c <- mvtnorm::pmvnorm(lower=lower, upper=upper,
-                          mean=rep(0, length(constr)), 
-                          sigma=(Rmat.ineq %*% sigma %*% t(Rmat.ineq))/b,
-                          keepAttr = F)
-  }
-  
-  # Compute the fit (f) for inequalities
-  if(!is.null(Rmat.ineq) && nrow(Rmat.ineq) > 0) {
+  # Compute the complexity (c) and fit (f) for inequalities
+  if(!is.null(Rmat_ineq) && nrow(Rmat_ineq) > 0) {
+    
     if(any(constr == "<")) {
       est_adjusted <- -est
     } else {
       est_adjusted <- est
     }
-    f <- mvtnorm::pmvnorm(lower=lower,
-                          upper=upper,
-                          mean=c(Rmat.ineq %*% est_adjusted),
-                          sigma=Rmat.ineq %*% sigma %*% t(Rmat.ineq),
-                          keepAttr = F) 
+    
+    # Initialize bounds for inequalities
+    lower <- rep(-Inf, length(ineq.constr))
+    upper <- rep(Inf, length(ineq.constr))
+    
+    # Assign bounds based on inequality constraints
+    lower[ineq.constr == ">"] <- 0
+    upper[ineq.constr == "<"] <- 0
+    
+    c_ineq <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+                                          mean = rep(0, length(ineq.constr)), 
+                                          sigma = Rmat_ineq %*% sigma %*% t(Rmat_ineq)/b,
+                                          keepAttr = F))
+    f_ineq <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+                                          mean = c(Rmat_ineq %*% est_adjusted),
+                                          sigma = Rmat_ineq %*% sigma %*% t(Rmat_ineq),
+                                          keepAttr = F))
+    BFu_ineq <- f_ineq / c_ineq
+  } else {
+    c_ineq <- 1
+    f_ineq <- 1
+    BFu_ineq <- 1
   }
   
-  # Handle the equality constraints
-  if(!is.null(Rmat.eq) && nrow(Rmat.eq) > 0) {
-    sigma_eq <- Rmat.eq %*% sigma %*% t(Rmat.eq)
-    f <- mvtnorm::dmvnorm(x=rep(0, length(constr)), mean=Rmat.eq %*% est, sigma=sigma_eq, log=F)
-    c <- mvtnorm::dmvnorm(rep(0, nrow(Rmat.eq)), sigma=sigma_eq/b, log=F)
+  if (!is.null(Rmat_eq) && nrow(Rmat_eq) > 0) {
+    c_eq <- mvtnorm::dmvnorm(rep(0, nrow(Rmat_eq)), 
+                             sigma = Rmat_eq %*% sigma %*% t(Rmat_eq)/b)
+    f_eq <- mvtnorm::dmvnorm(x = rep(0, nrow(Rmat_eq)), mean = Rmat_eq %*% est, 
+                             sigma = Rmat_eq %*% sigma %*% t(Rmat_eq))
+    BFu_eq <- f_eq / c_eq
+  } else {
+    c_eq <- 1
+    f_eq <- 1
+    BFu_eq <- 1
   }
   
-  BFu <- f/c
-  return(list(complexity=c, fit=f, BFu=BFu))
+  BFu <- BFu_ineq * BFu_eq
+  
+  return(list(complex_ineq = c_ineq, 
+              complex_eq = c_eq,
+              fit_ineq = f_ineq, 
+              fit_eq = f_eq,
+              BFu = BFu))
 }
 
+N <- 100
+est <- c(1,2,3)
+names(est) <- c("a", "b", "c")
+sigma <- matrix(c(1, 0.3, 0.3,
+                  0.3, 1, 0.3,
+                  0.3, 0.3, 1), nrow = 3)
+hypothesis <- "a=b<c"
 
-# example values
+bf_hand2(N=100, est=est, sigma=sigma, hypothesis=hypothesis)
+
+
+
+a <- BF(est, hypothesis=hypothesis, Sigma = sigma, n=N)
+a[["BFtable_confirmatory"]]
+
+bain(x=est, hypothesis=hypothesis, Sigma=sigma, n=N)
+
+
+
+
+
+# emore xample values
 N <- 100
 est <- c(3,2,1)
 names(est) <- c("a", "b", "c")
