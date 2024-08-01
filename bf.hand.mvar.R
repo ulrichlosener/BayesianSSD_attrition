@@ -129,5 +129,3 @@ a5[["BFtable_confirmatory"]][1,c(2,4,6)]
 bf.hand(N=N, sigma=sigma3, est=est3, hypothesis=hypothesis3)
 a3 <- BF(x=est3, Sigma = sigma3, n=N, hypothesis = hypothesis3)
 a3[["BFtable_confirmatory"]][1,c(2,4,6)]
-
-# results are the same, yay!
