@@ -80,8 +80,6 @@ hypothesis <- "a=b<c"
 
 bf_hand2(N=100, est=est, sigma=sigma, hypothesis=hypothesis)
 
-
-
 a <- BF(est, hypothesis=hypothesis, Sigma = sigma, n=N)
 a[["BFtable_confirmatory"]]
 
