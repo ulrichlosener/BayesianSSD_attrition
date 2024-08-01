@@ -59,9 +59,9 @@ server <- function(input, output) {
    par(mfrow=c(2,1))
    plot(t.points,remain,type="b",pch=16,ylim=c(0,1),xlim=c(0,D),xlab="time",ylab="probability",main="Survival function")
    plot(t.points,hazard,type="b",pch=16,xlim=c(0,D),xlab="time",ylab="probability", main="Hazard function")
-    }, height=600)
+ }, height=600)
  
-   output$exponentialinfo <- renderText({
-     "Here some very informative stuff about the exponential function"
-   })
+ output$exponentialinfo <- renderText({
+   "The exponential function is a special case of the Weibull function where the hazard rate is constant, i.e., gamma=1. The parameter `omega` represents the proportion of individuals who drop out of the trial at some point."
+ })
 }
