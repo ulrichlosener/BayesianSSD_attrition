@@ -27,16 +27,6 @@ server <- function(input, output) {
   plot(t.points,hazard,type="b",pch=16,xlim=c(0,D),xlab="time",ylab="probability", main="Hazard function")
     }, height=600)
  
- output$weibullinfo <- renderText({
-   "The Weibull distribution is a generalization of the Exponential distribution in a sense that the hazard rate is not constrained to be constant over time.
-   The parameter `omega` represents the proportion of individuals who drop out of the trial at some point.
-   The parameter `gamma` represents the linear change in dropout propbability over time. 
-   If gamma < 1, individuals are more likely to drop out at the beginning of the trial.
-   If gamma > 1, individuals are more likely to drop out at the end of the trial.
-   If gamma = 1, the dropout risk is constant (in this case, the Weibull distribution is equivalent to the exponential distribution)
-   "
- })
- 
  output$exponentialplots <- renderPlot({
    validate(need(input$D2>=3,"Duration of the study should be at least three."))
    if(input$omega2<0 || input$omega2>1) {

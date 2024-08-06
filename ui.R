@@ -1,36 +1,8 @@
 library(shiny)
 library(shinydashboard)
 library(shinythemes)
-library(plotly)
 library(DT)
 library(bslib) 
-library(ggplot2)
-
-# ui <- dashboardPage(skin="yellow",   
-# dashboardHeader(title = "Attrition Patterns",disable = F),
-# dashboardSidebar(disable = T),
-# dashboardBody(
-#   titlePanel("Attrition Patterns in a Longitudinal Study as Modelled by a Survival Function"),
-#   fluidRow(
-#       column(width=6,  height = 450,
-#              box(title = "Parameters", width = NULL, 
-#                  numericInput("D", "Duration of study", 5),
-#                  numericInput("f", "Frequency of observation", 1),
-#                  numericInput("omega", "Omega (proportion of subjects who drop out at some point)", .3, min = 0, max = 1),
-#                  numericInput("gamma", "Gamma (hazard rate)", 1, min = 0, max = 100),
-#                  ),
-#              box(title = "Create graphs",  width=NULL, background = "yellow",
-#                  submitButton("Submit")
-#                  )
-#     
-#             ),
-#       column(width=12,height = 450,
-#              box(title = "Attrition",width=4,height=540,
-#                   plotOutput(outputId = "survivalplots", height=480))
-#             )
-#           )
-#       )
-# )
 
 ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   nav_panel(title="Introduction",
@@ -55,8 +27,34 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                               numericInput("gamma", "Gamma", 3, min = 0, max = 100, step = .5)
                             ),
                             fluidRow(column(width=6, plotOutput(outputId = "weibullplots")),
-                                     column(width=6, textOutput(outputId = "weibullinfo")))
-                            )),
+                                     column(width=6,
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                                tags$ul(
+                                                  tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                  tags$li("Must be at least three in this case")
+                                                ),
+                                              tags$h4("Frequency of observation"),
+                                                tags$ul(
+                                                  tags$li("The number of observations taken per unit in time"),
+                                                  tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                  tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                                ),
+                                              tags$h4("Omega"),
+                                                tags$ul(
+                                                  tags$li("Proportion of participants that is expected to drop out at some point during the study"),
+                                                ),
+                                              tags$h4("Gamma"),
+                                                tags$ul(
+                                                  tags$li("Gamma: Hazard rate, determines whether dropout in concentrated towards the beginning (gamma < 1) or the end (gamma > 1) of a study"),
+                                                  tags$li("If gamma = 1, then the Weibull function equals the exponential function")
+                                                )
+                                            )
+                                      )
+                            )
+                            )
+                  ),
                   
                   nav_panel(title="Exponential",
                             layout_sidebar(sidebar = sidebar(
@@ -65,8 +63,29 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                               numericInput("omega2", "Omega", .5, min = 0, max = 1, step = .1)
                             ),
                             fluidRow(column(width=6, plotOutput(outputId = "exponentialplots")),
-                                     column(width=6, textOutput(outputId = "exponentialinfo")))
-                            )),
+                                     column(width=6, 
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                                tags$ul(
+                                                  tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                  tags$li("Must be at least three in this case")
+                                                ),
+                                              tags$h4("Frequency of observation"),
+                                                tags$ul(
+                                                  tags$li("The number of observations taken per unit in time"),
+                                                  tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                  tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                                ),
+                                              tags$h4("Omega"),
+                                                tags$ul(
+                                                  tags$li("Proportion of participants that is expected to drop out at some point during the study"),
+                                                ),
+                                            )
+                                    )
+                            )
+                            )
+                  ),
                   
                   nav_panel(title="More survival functions", p("Coming soon!")),
                   nav_spacer()
