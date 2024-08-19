@@ -40,8 +40,8 @@ for(j in 1:n){
   suppressMessages({
     for(i in 1:m){
       a[[i]] <- getbf.mis(N=(j*10+20), t.points=c(0,1,2,3,4), dropout=T, gamma=3, omega=.2, 
-                                 var.u0=.03, var.u1=.1, cov=0, var.e=.02, eff.size=.5, 
-                                 fraction=1, Neff="worst", log.grow=F, hyp="h1")
+                          var.u0=.03, var.u1=.1, cov=0, var.e=.02, eff.size=.5, 
+                          fraction=1, Neff="worst", log.grow=F, hyp="h1")
       BF10[i] <- unlist(a[[i]][1])
     }
   })
@@ -97,7 +97,7 @@ p1 <- ggplot(g1, aes(x=N, y=power, color=as.factor(omega))) +
   geom_line() +
   scale_color_discrete(name="omega") +
   ggtitle("gamma=3")
-  
+
 
 
 pdf(file = "C://Users/losen002/OneDrive - Universiteit Utrecht/Desktop/PhD/BayesianSSD/Plots/N.mis.pdf", width = 6, height = 4)

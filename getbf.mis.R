@@ -30,6 +30,9 @@ library(dplyr)
 
 getbf.mis <- function(N, t.points, var.u0, var.u1, cov, var.e, eff.size, fraction, Neff, log.grow, hyp, dropout, omega, gamma){
   
+  # if distributions are given as parameter inputs, draw
+  
+  
   n <- length(t.points)  # number of measurement occasions
   ifelse(Neff=="worst",  # if Neff="worst", then Neff=N, otherwise Neff=N*n
          b <- fraction/N,  # b fraction to specify prior = fraction / Neff
@@ -55,10 +58,6 @@ getbf.mis <- function(N, t.points, var.u0, var.u1, cov, var.e, eff.size, fractio
   }
   survival <-  weibull(omega=omega, gamma=gamma, time=t.prop)
   hazard <- (survival - data.table::shift(survival, n=1, type="lead"))/survival
-  
-  exponential <- function(lambda, time=t.prop){
-    
-  }
   
   # generate data under H0 -----------------------------------------------------
   u0.H0 <- rep(multinorm[1:(nrow(multinorm)/2),1], each=n)  # random intercepts for H0
