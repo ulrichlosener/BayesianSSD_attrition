@@ -51,7 +51,18 @@ server <- function(input, output) {
    plot(t.points,hazard,type="b",pch=16,xlim=c(0,D),xlab="time",ylab="probability", main="Hazard function")
  }, height=600)
  
- output$exponentialinfo <- renderText({
-   "The exponential function is a special case of the Weibull function where the hazard rate is constant, i.e., gamma=1. The parameter `omega` represents the proportion of individuals who drop out of the trial at some point."
+ # output$hand.plot.survival <- renderPlot({
+ #   t.points.hand <- input$t.points
+ #   surv.hand <- input$S(j)
+ #   plot(t.points.hand, surv.hand, type="b")
+ # }, height=600)
+ 
+ output$hand.plots <- renderPlot({
+   if(input$option == "opt1") {
+       t.points.hand <- as.numeric(unlist(strsplit(input$meas.occ,",")))
+       surv.hand <- as.numeric(unlist(strsplit(input$survival.hand,",")))
+       plot(t.points.hand, surv.hand, type="b")
+   }
  })
+   
 }

@@ -95,12 +95,30 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                             )
                             )
                   ),
-                  nav_panel(title="More survival functions", p("Coming soon!")),
+                  nav_panel(title="Survival by hand", 
+                            layout_sidebar(sidebar = sidebar(
+                              radioButtons("option", "Choose an option:", 
+                                           choices = list("Enter the survival probability function, i.e., the expected proportion of participants remaining in the study for each measurement occasion" = "opt1", 
+                                                          "Enter the hazard probability function, i.e., the probability of dropping out between j and j-1" = "opt2"), selected = "opt1"),
+                              conditionalPanel(condition = "input.option == 'opt1'", 
+                                               textInput("meas.occ", "Measurement Occasions (comma delimited)", "0,1,2,5,8,9,10"),
+                                               textInput("survival.hand", "Expected proportion of participants remaining in the study at each measurement occasion, S(j)", "1, .95, .9, .8, .7, .65, .6")
+                                               ),
+                              conditionalPanel(condition = "input.option == 'opt2'",
+                                               textInput("meas.occ", "Measurement Occasions (comma delimited)", "0,1,2,5,8,9,10"),
+                                               )
+                            ), 
+                            fluidRow(column(width=6, plotOutput(outputId = "hand.plots")),
+                                     column(width=6, 
+                                            tags$p("here some text")))
+                                  )               
+                            ),
+                  
                   nav_spacer(),
                   nav_menu(
                     title = "Links",
                     nav_item(tags$a("GitHub", href = "https://github.com/ulrichlosener/BayesianSSD_attrition")),
-                    nav_item(tags$a("Contact", href= "https://www.uu.nl/staff/UCLosener2/Contact"))
+                    nav_item(tags$a("Contact", href = "https://www.uu.nl/staff/UCLosener2/Contact"))
                   )
   )
 
