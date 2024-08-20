@@ -23,8 +23,8 @@ server <- function(input, output) {
     }
     
   par(mfrow=c(2,1))
-  plot(t.points,remain,type="b",pch=16,ylim=c(0,1),xlim=c(0,D),xlab="time",ylab="probability",main="Survival function")
-  plot(t.points,hazard,type="b",pch=16,xlim=c(0,D),xlab="time",ylab="probability", main="Hazard function")
+  plot(t.points,remain,type="b", pch=16, ylim=c(0,1), xlim=c(0,D), xlab="measurement occasion", ylab="probability", main="Survival function")
+  plot(t.points,hazard,type="b", pch=16, xlim=c(0,D), xlab="measurement occasion", ylab="probability", main="Hazard function")
     }, height=600)
  
  output$exponentialplots <- renderPlot({
@@ -47,22 +47,27 @@ server <- function(input, output) {
    }
    
    par(mfrow=c(2,1))
-   plot(t.points,remain,type="b",pch=16,ylim=c(0,1),xlim=c(0,D),xlab="time",ylab="probability",main="Survival function")
-   plot(t.points,hazard,type="b",pch=16,xlim=c(0,D),xlab="time",ylab="probability", main="Hazard function")
+   plot(t.points,remain,type="b", pch=16, ylim=c(0,1), xlim=c(0,D), xlab="measurement occasion", ylab="probability", main="Survival function")
+   plot(t.points,hazard,type="b", pch=16, xlim=c(0,D), xlab="measurement occasion", ylab="probability", main="Hazard function")
  }, height=600)
- 
- # output$hand.plot.survival <- renderPlot({
- #   t.points.hand <- input$t.points
- #   surv.hand <- input$S(j)
- #   plot(t.points.hand, surv.hand, type="b")
- # }, height=600)
  
  output$hand.plots <- renderPlot({
    if(input$option == "opt1") {
        t.points.hand <- as.numeric(unlist(strsplit(input$meas.occ,",")))
        surv.hand <- as.numeric(unlist(strsplit(input$survival.hand,",")))
-       plot(t.points.hand, surv.hand, type="b")
+       n <- length(t.points.hand)
+       hazard <- rep(NA, n)
+       for(i in 1:(n-1)) {
+         hazard[i+1] <- round((surv.hand[i]-surv.hand[i+1])/surv.hand[i], digits=7)
+       }
+       par(mfrow=c(2,1))
+       plot(t.points.hand, surv.hand, type="b", xaxt="n", pch=16, ylim=c(0,1), xlim=c(0,max(t.points.hand)), xlab="measurement occasion", ylab="probability", main="Your own Survival function")
+       axis(side=1, at=t.points.hand)
+       plot(t.points.hand, hazard, type="b", xaxt="n", pch=16, xlim=c(0,max(t.points.hand)), xlab="measurement occasion", ylab="probability", main="Your own Hazard function")
+       axis(side=1, at=t.points.hand)
+   } else if(input$option == "opt2") {
+     plot(c(1,2,3), c(1,2,3))
    }
- })
+ }, height=600)
    
 }
