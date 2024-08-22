@@ -121,8 +121,11 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                   )               
                             ),
                   nav_panel(title="More?", 
-                            tags$h4("If you are missing information or a function in this ShinyApp, please feel free to contact me under:")
-                            
+                            tags$h4("If you are missing information or a certain functionality in this ShinyApp, please feel free to contact me!"),
+                            tags$p("Via e-mail:"),
+                            tags$p("u.c.losener1@uu.nl"),
+                            tags$p("or see the following link for more information."),
+                            tags$a(href="https://www.uu.nl/staff/UCLosener2", "Ulrich Lösener"),
                             ),
                   nav_spacer(),
                   nav_menu(
