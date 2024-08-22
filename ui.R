@@ -120,7 +120,10 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                      ))
                                   )               
                             ),
-                  
+                  nav_panel(title="More?", 
+                            tags$h4("If you are missing information or a function in this ShinyApp, please feel free to contact me under:")
+                            
+                            ),
                   nav_spacer(),
                   nav_menu(
                     title = "Links",
