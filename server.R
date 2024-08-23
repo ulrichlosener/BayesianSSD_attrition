@@ -1,3 +1,5 @@
+# Server part of the shiny app
+
 server <- function(input, output) {
 
  output$weibullplots <- renderPlot({
