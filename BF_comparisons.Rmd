@@ -1,0 +1,335 @@
+---
+title: "BF_comparison"
+author: "Ulrich Lösener"
+date: "9-9-2024"
+output: html_document
+---
+
+In this file, I compare the results of the function `BF` from the package BFpack (v. 1.2.3), the function `bain` from the bain package (v. 0.2.8), and my own function (`bf_hand`) to calculate the multivariate Bayes Factor for informative hypotheses. 
+
+First, I define a function to "translate" hypotheses into restriction matrices
+
+```{r hyp2mat}
+
+hyp2mat <- function(hypothesis) {
+  
+  # Split the hypothesis into parts
+  parts <- unlist(strsplit(hypothesis, "(?=[<>=])|(?<=[<>=])", perl = TRUE))
+  
+  # Extract parameters
+  parameters <- unique(parts[!parts %in% c("<", ">", "=")])
+  num_params <- length(parameters)
+  
+  # storage for restriction matrices
+  ineq_constraints <- list()
+  eq_constraints <- list()
+  
+  # Parse the hypothesis
+  for (i in seq(1, length(parts) - 1, by = 2)) {
+    param1 <- parts[i]
+    operator <- parts[i + 1]
+    param2 <- parts[i + 2]
+    
+    index1 <- match(param1, parameters)
+    index2 <- match(param2, parameters)
+    
+    if (operator == "<" || operator == ">") {
+      constraint <- rep(0, num_params)
+      if (operator == "<") {
+        constraint[c(index1, index2)] <- c(-1, 1)
+      } else {
+        constraint[c(index1, index2)] <- c(1, -1)
+      }
+      ineq_constraints[[length(ineq_constraints) + 1]] <- constraint
+    } else if (operator == "=") {
+      constraint <- rep(0, num_params)
+      constraint[c(index1, index2)] <- c(1, -1)
+      eq_constraints[[length(eq_constraints) + 1]] <- constraint
+    }
+  }
+  
+  # Convert lists to matrices
+  if (length(ineq_constraints) > 0) {
+    Ineq.mat <- do.call(rbind, ineq_constraints)
+  } else {
+    Ineq.mat <- matrix(0, 0, num_params)
+  }
+  
+  if (length(eq_constraints) > 0) {
+    Eq.mat <- do.call(rbind, eq_constraints)
+  } else {
+    Eq.mat <- matrix(0, 0, num_params)
+  }
+  
+  list(Ineq.mat = Ineq.mat, Eq.mat = Eq.mat)
+}
+```
+
+Next, I define my own function to calculate BF_u for informative hypotheses. 
+
+```{r my own multivariate BF function}
+
+bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
+  
+  hypothesis <- gsub("([>=<])", " \\1 ", hypothesis) # Add spaces
+  hypothesis <- gsub("\\s+", " ", hypothesis) # Remove any extra spaces
+  hypothesis <- trimws(hypothesis) # Trim leading and trailing spaces
+
+  b <- fraction/N
+  struc <- unlist(strsplit(hypothesis, " "))
+  params <- struc[seq(1, length(struc), 2)]
+  constr <- struc[seq(2, length(struc) - 1, 2)]
+  ineq.constr <- constr[constr == "<" | constr == ">"]
+  eq.constr <- constr[constr == "="]
+  
+  # Contrast matrix
+  Rmat <- hyp2mat(hypothesis = hypothesis)
+  Rmat_ineq <- Rmat$Ineq.mat
+  Rmat_eq <- Rmat$Eq.mat
+  
+  # Compute the complexity (c) and fit (f) for inequalities
+  if(!is.null(Rmat_ineq) && nrow(Rmat_ineq) > 0) {
+    
+    if(any(constr == "<")) {
+      est_adjusted <- -est
+    } else {
+      est_adjusted <- est
+    }
+    
+    # Initialize bounds for inequalities
+    lower <- rep(-Inf, length(ineq.constr))
+    upper <- rep(Inf, length(ineq.constr))
+    
+    # Assign bounds based on inequality constraints
+    lower[ineq.constr == ">"] <- 0
+    upper[ineq.constr == "<"] <- 0
+    
+    c_ineq <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+                                          mean = rep(0, length(ineq.constr)), 
+                                          sigma = Rmat_ineq %*% sigma %*% t(Rmat_ineq)/b,
+                                          keepAttr = F))
+    f_ineq <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+                                          mean = c(Rmat_ineq %*% est_adjusted),
+                                          sigma = Rmat_ineq %*% sigma %*% t(Rmat_ineq),
+                                          keepAttr = F))
+    BFu_ineq <- f_ineq / c_ineq
+  } else {
+    c_ineq <- 1
+    f_ineq <- 1
+    BFu_ineq <- 1
+  }
+  
+  if (!is.null(Rmat_eq) && nrow(Rmat_eq) > 0) {
+    c_eq <- mvtnorm::dmvnorm(rep(0, nrow(Rmat_eq)), 
+                             sigma = Rmat_eq %*% sigma %*% t(Rmat_eq)/b)
+    f_eq <- mvtnorm::dmvnorm(x = rep(0, nrow(Rmat_eq)), mean = Rmat_eq %*% est, 
+                             sigma = Rmat_eq %*% sigma %*% t(Rmat_eq))
+    BFu_eq <- f_eq / c_eq
+  } else {
+    c_eq <- 1
+    f_eq <- 1
+    BFu_eq <- 1
+  }
+  
+  BFu <- BFu_ineq * BFu_eq
+  
+  return(list(complex_ineq = c_ineq, 
+              complex_eq = c_eq,
+              fit_ineq = f_ineq, 
+              fit_eq = f_eq,
+              BFu = BFu))
+}
+```
+
+Now, we load the packages bain and BFpack.
+
+```{r}
+library(bain)
+library(BFpack)
+```
+
+### Simulation 1: Fix N, vary effect size
+
+The effect size in this case is the difference between the three parameters "a", "b", and "c". In this simulation, we evaluate 100 different effect sizes from very small (a=0, b=0.1, c=0.2) to very large (a=0, b=10, c=20), keeping N constant at N=100.
+
+The first hypothesis under consideration is $H_1: a<b<c$. We expect the $BF_{1u}$ to increase with increasing effect size. 
+
+```{r simulation1}
+
+hyp1 <- "a<b<c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+ests <- list() # space for estimates of a, b, and c
+
+# create vectors of a, b, and c according to different effect sizes and store them in ests
+for(i in 1:m){ 
+  a <- 0
+  b <- a+i/10
+  c <- b+i/10
+  ests[[i]] <- c(a, b, c)
+  names(ests[[i]]) <- c("a", "b", "c")
+}
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = ests[[i]], N=100, sigma=sig, hypothesis=hyp1)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp1)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp1)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+
+```
+
+Now, we plot the results.
+
+```{r plots1}
+library(ggplot2)
+
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes( x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("effect size") +
+  ggtitle("H1: a<b<c")
+
+BFs_bfpack == BFs_hand # TRUE
+```
+
+My function `bf_hand` gives the exact same results as BFpack. The results from bain are a bit noisy but also in accordance with the other two functions.
+
+Now, we do the same for a different hypothesis. $H_2:a<b=c$. Because we know that $b\neq c$, we expect the BF to decline at some point. For convenience, the code for the second simulation is hidden. It is very similar to the code for the first simulation with exception of the hypothesis.
+
+```{r simulation1b, include=FALSE}
+
+hyp2 <- "a<b=c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+ests <- list() # space for estimates of a, b, and c
+
+# create vectors of a, b, and c according to different effect sizes and store them in ests
+for(i in 1:m){ 
+  a <- 0
+  b <- a+i/10
+  c <- b+i/10
+  ests[[i]] <- c(a, b, c)
+  names(ests[[i]]) <- c("a", "b", "c")
+}
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = ests[[i]], N=100, sigma=sig, hypothesis=hyp2)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp2)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp2)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+
+```
+
+Now, we plot the results.
+
+```{r plots2}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes( x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("effect size") +
+  ggtitle("H2: a<b=c")
+
+```
+
+This is interesting. All three functions give different results. My own function `bf_hand` seems to be in between the other two. 
+Let's see what happens when the hypothesis is $H_3:a=b=c$
+
+```{r simulation1c, include=FALSE}
+
+hyp3 <- "a=b=c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+ests <- list() # space for estimates of a, b, and c
+
+# create vectors of a, b, and c according to different effect sizes and store them in ests
+for(i in 1:m){ 
+  a <- 0
+  b <- a+i/10
+  c <- b+i/10
+  ests[[i]] <- c(a, b, c)
+  names(ests[[i]]) <- c("a", "b", "c")
+}
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = ests[[i]], N=100, sigma=sig, hypothesis=hyp3)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp3)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp3)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+
+```
+
+
+```{r plots3, echo=-2}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("effect size") +
+  ggtitle("H3: a=b=c")
+
+BFs_bfpack == BFs_hand # TRUE
+```
+
+As was the case in the first simulation, the function from BFpack and `bf_hand` give the exact same results. Interestingly, the BF from bain is exactly half of the other BFs. 
