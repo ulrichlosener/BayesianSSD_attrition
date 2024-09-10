@@ -5,9 +5,9 @@ date: "9-9-2024"
 output: html_document
 ---
 
-In this file, I compare the results of the function `BF` from the package BFpack (v. 1.2.3), the function `bain` from the bain package (v. 0.2.8), and my own function (`bf_hand`) to calculate the multivariate Bayes Factor for informative hypotheses. 
+In this file, I compare the results of the function `BF` from the package BFpack (v. 1.2.3), the function `bain` from the bain package (v. 0.2.8), and my own function `bf_hand` to calculate the multivariate Bayes Factor for informative hypotheses. 
 
-First, I define a function to "translate" hypotheses into restriction matrices
+First, I define a function to "translate" hypotheses into restriction matrices as in (Gu et al., 2018)
 
 ```{r hyp2mat}
 
@@ -90,6 +90,7 @@ bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
   # Compute the complexity (c) and fit (f) for inequalities
   if(!is.null(Rmat_ineq) && nrow(Rmat_ineq) > 0) {
     
+    # if there are < constraints, reverse sign of estimates
     if(any(constr == "<")) {
       est_adjusted <- -est
     } else {
@@ -143,12 +144,14 @@ bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
 
 Now, we load the packages bain and BFpack.
 
-```{r}
+```{r libraries, message=FALSE, warning=FALSE}
 library(bain)
 library(BFpack)
 ```
 
-### Simulation 1: Fix N, vary effect size
+## Simulation 1: Fix N, vary effect size
+
+####  $H_1: a<b<c$
 
 The effect size in this case is the difference between the three parameters "a", "b", and "c". In this simulation, we evaluate 100 different effect sizes from very small (a=0, b=0.1, c=0.2) to very large (a=0, b=10, c=20), keeping N constant at N=100.
 
@@ -197,7 +200,7 @@ for(i in 1:m){
 
 Now, we plot the results.
 
-```{r plots1}
+```{r plots1.1, warning=FALSE}
 library(ggplot2)
 
 sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
@@ -214,6 +217,8 @@ BFs_bfpack == BFs_hand # TRUE
 ```
 
 My function `bf_hand` gives the exact same results as BFpack. The results from bain are a bit noisy but also in accordance with the other two functions.
+
+#### $H_2:a<b=c$
 
 Now, we do the same for a different hypothesis. $H_2:a<b=c$. Because we know that $b\neq c$, we expect the BF to decline at some point. For convenience, the code for the second simulation is hidden. It is very similar to the code for the first simulation with exception of the hypothesis.
 
@@ -260,7 +265,7 @@ for(i in 1:m){
 
 Now, we plot the results.
 
-```{r plots2}
+```{r plots1.2, echo=FALSE}
 sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
 names(sim_dat1) <- c("bf", "type", "iteration") 
 sim_dat1$bf <- as.numeric(sim_dat1$bf)
@@ -274,6 +279,9 @@ ggplot(sim_dat1, aes( x=iteration, y=bf, color=type)) +
 ```
 
 This is interesting. All three functions give different results. My own function `bf_hand` seems to be in between the other two. 
+
+#### $H_3:a=b=c$
+
 Let's see what happens when the hypothesis is $H_3:a=b=c$
 
 ```{r simulation1c, include=FALSE}
@@ -318,7 +326,7 @@ for(i in 1:m){
 ```
 
 
-```{r plots3, echo=-2}
+```{r plots1.3, echo=FALSE}
 sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
 names(sim_dat1) <- c("bf", "type", "iteration") 
 sim_dat1$bf <- as.numeric(sim_dat1$bf)
@@ -328,8 +336,278 @@ ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
   geom_line() +
   xlab("effect size") +
   ggtitle("H3: a=b=c")
+```
 
+```{r}
 BFs_bfpack == BFs_hand # TRUE
 ```
 
+
 As was the case in the first simulation, the function from BFpack and `bf_hand` give the exact same results. Interestingly, the BF from bain is exactly half of the other BFs. 
+
+
+```{r simulation1d, include=FALSE, cache=TRUE}
+
+hyp4 <- "a>b>c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+ests <- list() # space for estimates of a, b, and c
+
+# create vectors of a, b, and c according to different effect sizes and store them in ests
+for(i in 1:m){ 
+  a <- 0
+  b <- a+i/10
+  c <- b+i/10
+  ests[[i]] <- c(a, b, c)
+  names(ests[[i]]) <- c("a", "b", "c")
+}
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = ests[[i]], N=100, sigma=sig, hypothesis=hyp4)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp4)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=ests[[i]], n=100, Sigma=sig, hypothesis=hyp4)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+```
+
+#### $H_4:a>b>c$
+
+Lastly, we have a look at the hypothesis $H_4:a>b>c$.
+
+```{r plots1.4, echo=FALSE}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("effect size") +
+  ggtitle("H4: a>b>c")
+```
+
+```{r}
+BFs_bain - BFs_bfpack # non-zero difference
+BFs_bfpack - BFs_hand # zero difference
+```
+
+Although this is a similar form to $H_1$ (inequality constraints only), this scenario is different in that all three functions give the same results. Note that only `bf_hand` and `BF` (from BFpack) are *exactly* equivalent while results from `bain` are (ever so) slightly different. This difference becomes even smaller for larger effect sizes. This is most likely due to the fact that `bain` relies on stochastic processes such as repeated sampling from the posterior.  
+
+
+## Simulation 2: Vary N, fix effect size
+
+Now we fix the effect size to a medium effect, resulting in the following estimates: $a=0; b=1; c=2$.
+For the first hypothesis $H_1:a<b<c$, we expect no effect of N as no (about) equality constraints are present.
+
+```{r simulation2a, include=FALSE, cache=TRUE}
+hyp1 <- "a<b<c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+est <- c(0,1,2) # space for estimates of a, b, and c
+names(est) <- c("a", "b", "c")
+Ns <- seq(10:110)
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = est, N=Ns[i], sigma=sig, hypothesis=hyp1)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp1)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp1)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+```
+
+```{r plots2.1, echo=FALSE}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("N-10") +
+  ggtitle("H1: a<b<c")
+```
+
+```{r}
+BFs_bfpack==BFs_hand
+```
+
+
+Unsurprisingly, N has no effect on the $BF_{1u}$. We can see that the result from `bain` oszillates around the results from `BF` and `bf_hand` which are identical to each other (except for some values which deviate slightly from each other).
+
+#### $H_2:a<b=c$
+
+```{r simulation2b, include=FALSE, cache=TRUE}
+hyp2 <- "a<b=c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+est <- c(0,1,2) # space for estimates of a, b, and c
+names(est) <- c("a", "b", "c")
+Ns <- seq(10:110)
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = est, N=Ns[i], sigma=sig, hypothesis=hyp2)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp2)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp2)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+```
+
+```{r plots2.2, echo=FALSE}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("N-10") +
+  ggtitle("H2: a<b=c")
+```
+
+Because there is an equality constraint, N has an effect on the $BF_{2u}$.
+We see the same pattern as in simulation 1: `bf_hand` gives results which are in between `BF` and `bain`. 
+
+```{r simulation2c, include=FALSE, cache=TRUE}
+hyp3 <- "a=b=c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+est <- c(0,1,2) # space for estimates of a, b, and c
+names(est) <- c("a", "b", "c")
+Ns <- seq(10:110)
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = est, N=Ns[i], sigma=sig, hypothesis=hyp3)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp3)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp3)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+```
+
+```{r plots2.3, echo=FALSE}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("N-10") +
+  ggtitle("H3: a=b=c")
+```
+
+```{r}
+BFs_hand==BFs_bfpack
+```
+
+Again, `bf_hand` and `BF` virtually give the same results while the result from `bain` is about half the value of the others (analogous to simulation 1). 
+
+#### $H_{4b}:a=b>$
+
+```{r simulation2d, include=FALSE, cache=TRUE}
+hyp4 <- "a=b>c" # define our hypothesis H1
+
+sig <- matrix(c(1, 0.3, 0.3, # covariance matrix of parameters
+                0.3, 1, 0.3,
+                0.3, 0.3, 1), nrow = 3)
+
+
+m <- 100 # number of iterations
+est <- c(0,1,2) # space for estimates of a, b, and c
+names(est) <- c("a", "b", "c")
+Ns <- seq(10:110)
+
+# storage
+BFs_hand <- rep(NA, m)
+BFs_bfpack <- rep(NA, m)
+BFs_bain <- rep(NA, m)
+
+# fix N, vary eff.size
+set.seed(123)
+for(i in 1:m){
+  r <- bf_hand(est = est, N=Ns[i], sigma=sig, hypothesis=hyp4)
+  BFs_hand[i] <- r$BFu
+  
+  r2 <- BF(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp4)
+  BFs_bfpack[i] <- r2[["BFtable_confirmatory"]][1,7]
+  
+  r3 <- bain(x=est, n=Ns[i], Sigma=sig, hypothesis=hyp4)
+  BFs_bain[i] <- r3[["fit"]][["BF.u"]][1]
+}
+```
+
+```{r plots2.4, echo=FALSE}
+sim_dat1 <- data.frame(cbind(c(BFs_hand, BFs_bfpack, BFs_bain), rep(c("hand", "bfpack", "bain"), each=100), as.numeric(rep(seq(1:100), 3))))
+names(sim_dat1) <- c("bf", "type", "iteration") 
+sim_dat1$bf <- as.numeric(sim_dat1$bf)
+sim_dat1$iteration <- as.numeric(sim_dat1$iteration)
+
+ggplot(sim_dat1, aes(x=iteration, y=bf, color=type)) +
+  geom_line() +
+  xlab("N-10") +
+  ggtitle("H4: a=b>c")
+```
+This is the first time that the result from `bf_hand` is quite different from the results from the other functions. The $BF_{4bu}$ from my function is dramatically larger than the others. 
