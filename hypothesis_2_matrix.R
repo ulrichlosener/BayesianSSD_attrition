@@ -54,13 +54,11 @@ hyp2mat <- function(hypothesis) {
 }
 
   # Example usage
-hypothesis1 <- "a>b=c<d"
-hypothesis2 <- "a=b=c"
-hypothesis3 <- "a1>a2<a3"
-hypothesis4 <- "a>b=c"
 
-result1 <- hyp2mat(hypothesis1)
-result2 <- hyp2mat(hypothesis2)
-result3 <- hyp2mat(hypothesis3)
-result4 <- hyp2mat(hypothesis4)
+
+
+hyp2mat("a>b=c<d")
+hyp2mat("a=b=c")
+hyp2mat("a1>a2<a3")
+hyp2mat("a>b=c")
 

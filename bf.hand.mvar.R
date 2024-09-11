@@ -29,6 +29,8 @@ bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
       est_adjusted <- est
     }
     
+    print(paste("adjusted estimate:", c(Rmat_ineq %*% est_adjusted)))
+    
     # Initialize bounds for inequalities
     lower <- rep(-Inf, length(ineq.constr))
     upper <- rep(Inf, length(ineq.constr))
@@ -37,7 +39,7 @@ bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
     lower[ineq.constr == ">"] <- 0
     upper[ineq.constr == "<"] <- 0
     
-    c_ineq <- as.numeric(mvtnorm::pmvnorm(lower = lower, upper = upper,
+    c_ineq <- as.numeric(mvtnorm::pmvnorm(lower = rep(0, length(ineq.constr)), upper = rep(Inf, length(ineq.constr)),
                                           mean = rep(0, length(ineq.constr)), 
                                           sigma = Rmat_ineq %*% sigma %*% t(Rmat_ineq)/b,
                                           keepAttr = F))
@@ -78,12 +80,13 @@ bf_hand <- function(N, est, sigma, hypothesis, fraction = 1) {
 N <- 100
 est <- c(1,2,3)
 names(est) <- c("a", "b", "c")
-sigma <- matrix(c(1, 0.3, 0.3,
+sigma <- matrix(c(1, 0.3, 0.2,
                   0.3, 1, 0.3,
-                  0.3, 0.3, 1), nrow = 3)
-hypothesis <- "a>b<c"
+                  0.2, 0.3, 1), nrow = 3)
+hypothesis <- "a<b>c"
 
-bf_hand3(N=100, est=est, sigma=sigma, hypothesis=hypothesis)
+bf_hand(N=100, est=est, sigma=sigma, hypothesis=hypothesis)
+bf_hand2(N=100, est=est, sigma=sigma, hypothesis=hypothesis)
 
 a <- BF(est, hypothesis=hypothesis, Sigma = sigma, n=N)
 a[["BFtable_confirmatory"]]
