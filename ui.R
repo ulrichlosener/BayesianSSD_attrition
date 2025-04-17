@@ -97,7 +97,7 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                             )
                             )
                   ),
-                  nav_panel(title="Survival by hand", 
+                  nav_panel(title="Non-parametric Survival function", 
                             layout_sidebar(sidebar = sidebar(
                               radioButtons("option", "Choose an option:", 
                                            choices = list("Enter the survival probability function, i.e., the expected proportion of participants remaining in the study for each measurement occasion" = "opt1", 
