@@ -21,11 +21,16 @@
 # log.grow = indicates whether to use logarithmic (TRUE) or linear growth (FALSE)
 # hyp = for which hypotheses should the BF be calculated ("H0", "H1", "both" or "h0", "h1", "b")
 
-# Note 1: this function requires the function "get_neff_attrition" to be loaded into the global environment
-# This function requires the packages "MASS", "dplyr", "lme4", and "data.table" to be installed
+# Note 1: this function requires the function "get_neff_mis" to be loaded into the global environment
+# This function requires the packages "MASS", "dplyr", and "lme4" to be installed
 #-------------------------------------------------------------------------------
 
-getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, var.e, eff.size, fraction, log.grow, hyp, beta1){
+getbf_mis <- function(dropout, distribution, params, N, t.points, var.u0, var.u1, cov, var.e, eff.size, fraction, log.grow, hyp, beta1){
+ 
+  if(!is.list(params)){stop("The input for the params argument has to be a list")}
+  if(distribution=="exponential" && length(params!=1)){stop("The exponential distribution requires only one parameter in the 'params' argument")}
+  if((distribution=="weibull" | distribution=="linear-exponential" | distribution=="log-logistic" | distribution=="gompertz") && length(params!=2)){stop("The weibull, linear-exponential, log-logistic, and gompertz distribution require two parameters in the 'params' argument")}
+  
   
   n <- length(t.points)  # number of measurement occasions
   ifelse(log.grow==F,  # if logarithmic growth is used, take log of t.points
@@ -45,11 +50,41 @@ getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, v
   multinorm <- MASS::mvrnorm(n=2*N, mu=c(0,0), matrix(c(var.u0, cov, cov, var.u1), nrow=2, ncol=2))  # draw random effects
   
   # create missingness with survival function ----------------------------------
-  weibull <- function(omega=1, gamma=1, time=t.prop){ # create the survival function (weibull)
-    (1-omega)^time^gamma
+  if (distribution == "weibull"){                                      # Weibull
+    weibull <- function(omega, gamma, time){ 
+      (1-omega)^time^gamma
+    }
+    survival <-  weibull(omega=params[[1]], gamma=params[[2]], time=t.prop)
+  } else if (distribution == "exponential"){                       # Exponential
+    exponential <- function(omega, time){
+      (1-omega)^time
+    }
+    survival <-  exponential(omega=params[[1]], time=t.prop)
+  } else if (distribution == "log-logistic"){                     # Log-logistic
+    log_logistic <- function(omega, gamma, time){
+      (1-omega)/((1-omega)+omega*time^gamma)
+    }
+    survival <- log_logistic(omega=params[[1]], gamma=params[[2]], time=t.prop)
+  } else if (distribution == "linear-exponential"){         # Linear-exponential
+    linear_exponential <- function(omega, gamma, time){
+      (exp((.5*gamma+log(1-omega))*time-.5*gamma*time^2))
+    }
+    survival <- linear_exponential(omega=params[[1]], gamma=params[[2]], time=t.prop)
+  } else if(distribution == "modified_weibull"){              # Modified Weibull
+    mod_weibull <- function(omega, gamma, kappa, time){
+      (exp(time^gamma*exp(kappa*(time-1))*log(1-omega)))
+    }
+    survival <- mod_weibull(omega=params[[1]], gamma=params[[2]], kappa=params[[3]], time=t.prop)
+  } else if(distribution=="gompertz"){                                # Gompertz
+    gompertz <- function(omega, gamma, time){
+      (exp((log(1-omega)/(exp(gamma)-1))*(exp(gamma*time)-1)))
+    }
+    survival <- gompertz(omega=params[[1]], gamma=params[[2]], time=t.prop)
   }
-  survival <-  weibull(omega=omega, gamma=gamma, time=t.prop)
-  hazard <- (survival - data.table::shift(survival, n=1, type="lead"))/survival
+  
+  # compute hazard: (S_t - S_{t+1}) / S_t
+  shifted_survival <- c(survival[-1], NA)  # drop first element and append NA
+  hazard <- (survival - shifted_survival) / survival  
   
   # generate data under H0 -----------------------------------------------------
   u0.H0 <- rep(multinorm[1:(nrow(multinorm)/2),1], each=n)  # random intercepts for H0
@@ -81,7 +116,7 @@ getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, v
     sig.H0 <- vcov(models.H0)[4,4]  # extract residual variance under H0  
     
     # calculate Neff and b
-    n_eff.H0 <- get_neff_attrition(model=models.H0, N=N, t.points=t.points, survival=survival)
+    n_eff.H0 <- get_neff_mis(model=models.H0, N=N, t.points=t.points, survival=survival)
     b.H0 <- fraction/n_eff.H0
 
     # calculate fits and complexities under H0
@@ -105,7 +140,7 @@ getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, v
     sig.H1 <- vcov(models.H1)[4,4]  # extract residual variance under H0
     
     # calculate Neff and b
-    n_eff.H1 <- get_neff_attrition(model=models.H1, N=N, t.points=t.points, survival=survival)
+    n_eff.H1 <- get_neff_mis(model=models.H1, N=N, t.points=t.points, survival=survival)
     b.H1 <- fraction/n_eff.H1
 
     # calculate fits and complexities under H1
@@ -137,7 +172,7 @@ getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, v
     sig.H0 <- vcov(models.H0)[4,4]  # extract residual variance under H0  
     
     # calculate Neff and b
-    n_eff <- get_neff_attrition(model=models.H0, N=N, t.points=t.points, survival=survival)
+    n_eff <- get_neff_mis(model=models.H0, N=N, t.points=t.points, survival=survival)
     b <- fraction/n_eff
 
     # calculate fits and complexities under H0
@@ -166,7 +201,7 @@ getbf_mis <- function(dropout, omega, gamma, N, t.points, var.u0, var.u1, cov, v
     sig.H1 <- vcov(models.H1)[4,4]  # extract residual variance under H0
     
     # calculate Neff and b
-    n_eff <- get_neff_attrition(model=models.H1, N=N, t.points=t.points, survival=survival)
+    n_eff <- get_neff_mis(model=models.H1, N=N, t.points=t.points, survival=survival)
     b <- fraction/n_eff
 
     # calculate fits and complexities under H1
