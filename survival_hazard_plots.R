@@ -1,21 +1,5 @@
 # Plots of different survival distributions
 library(ggplot2)
-
-x_range <- seq(0, 1, .01)
-surv_weib <- weibull(omega=.5, gamma=.5, time=x_range)
-dat_weib <- 
-
-ggplot(data)
-
-
-
-
-
-
-
-
-
-library(ggplot2)
 library(purrr)
 library(dplyr)
 library(tidyr)
@@ -187,12 +171,6 @@ hazard_plots <- all_data %>%
     return(p)
   })
 
-# Display plots (they will appear in RStudio's plot pane)
-# To view specific plots, you can access them from survival_plots or hazard_plots lists
-survival_plots[[6]]
-hazard_plots[[5]]
-
-
 grid.arrange(survival_plots[[1]], 
              survival_plots[[2]], 
              survival_plots[[3]], 
@@ -201,7 +179,6 @@ grid.arrange(survival_plots[[1]],
              survival_plots[[6]],
              nrow=2)
 
-
 grid.arrange(hazard_plots[[1]], 
              hazard_plots[[2]], 
              hazard_plots[[3]], 
@@ -209,7 +186,3 @@ grid.arrange(hazard_plots[[1]],
              hazard_plots[[5]], 
              hazard_plots[[6]],
              nrow=2)
-
-
-
-
