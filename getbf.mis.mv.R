@@ -29,10 +29,11 @@ library(BFpack)
 library(dplyr)
 
 getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hypothesis,
-                         N, t.points, var.u0, var.u1, cov, var.e, eff.sizes, fraction, log.grow, beta1){
+                         N, t.points, var.u0, var.u1, cov, var.e, eff.sizes, fraction, 
+                         log.grow, beta1){
   
   if(!is.list(params)){stop("The input for the params argument must be a list")}
-  if(distribution=="exponential" && length(params!=1)){stop("The exponential distribution requires only one parameter in the 'params' argument")}
+  if(distribution=="exponential" && length(params)!=1){stop("The exponential distribution requires only one parameter in the 'params' argument")}
   if((distribution=="weibull" | distribution=="linear-exponential" | distribution=="log-logistic" | distribution=="gompertz") && length(params)!=2){stop("The weibull, linear-exponential, log-logistic, and gompertz distribution require two parameters in the 'params' argument")}
   
   n <- length(t.points)  # number of measurement occasions
@@ -118,15 +119,15 @@ getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hyp
   sig_TAU <- as.matrix(vcov(models)[5,5])  # extract variance of estimates under H0  
   sig_INT <- as.matrix(vcov(models)[6,6])  # extract variance of estimates under H0  
   
-  # calculate N_eff #TO DO!!
+  # calculate N_eff
   n_eff <- get_neff_mis_mv(model=models, N=N, t.points=t.points, survival=survival)
 
   bf_res <- bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=n_eff, 
                  hypothesis=hypothesis, group_parameters = 1, joint_parameters = 0)
   
   bf_1c <- bf_res[["fit"]][["BF.c"]][1]
+  bfs <- bf_res[["BFmatrix"]]
   PMPc <- bf_res[["fit"]][["PMPc"]][1]
 
-  # return BF01 and BF10
   return(output = list(bf_1c=bf_1c, PMPc=PMPc))
 }

@@ -27,10 +27,9 @@
 
 getbf_mis <- function(dropout, distribution, params, N, t.points, var.u0, var.u1, cov, var.e, eff.size, fraction, log.grow, hyp, beta1){
  
-  if(!is.list(params)){stop("The input for the params argument has to be a list")}
-  if(distribution=="exponential" && length(params!=1)){stop("The exponential distribution requires only one parameter in the 'params' argument")}
-  if((distribution=="weibull" | distribution=="linear-exponential" | distribution=="log-logistic" | distribution=="gompertz") && length(params!=2)){stop("The weibull, linear-exponential, log-logistic, and gompertz distribution require two parameters in the 'params' argument")}
-  
+  if(!is.list(params)){stop("The input for the params argument must be a list")}
+  if(distribution=="exponential" && length(params)!=1){stop("The exponential distribution requires only one parameter in the 'params' argument")}
+  if((distribution=="weibull" | distribution=="linear-exponential" | distribution=="log-logistic" | distribution=="gompertz") && length(params)!=2){stop("The weibull, linear-exponential, log-logistic, and gompertz distribution require two parameters in the 'params' argument")}
   
   n <- length(t.points)  # number of measurement occasions
   ifelse(log.grow==F,  # if logarithmic growth is used, take log of t.points
@@ -41,7 +40,6 @@ getbf_mis <- function(dropout, distribution, params, N, t.points, var.u0, var.u1
          )
   )
   t.prop <- t.points/max(t.points)
-  
   id <- rep(seq_len(N), each=n)  # create ID variable
   treat <- as.numeric(as.character(gl(n=2, k=n, length=N*n, labels=c(0,1))))  # create treatment variable
   dat0 <- data.frame(id, treat, t)  # combine into data frame
