@@ -28,8 +28,8 @@
 library(BFpack)
 library(dplyr)
 
-getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hypothesis,
-                         N, t.points, var.u0, var.u1, cov, var.e, eff.sizes, fraction, 
+getbf_mis_mv <- function(N, dropout, distribution="weibull", params=list(.5,1), hypothesis,
+                         t.points, var.u0, var.u1, cov, var.e, eff.sizes, fraction, 
                          log.grow, beta1){
   
   if(!is.list(params)){stop("The input for the params argument must be a list")}
@@ -44,9 +44,9 @@ getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hyp
 
   t.prop <- t.points/max(t.points)
   id <- rep(seq_len(N), each=n)  # create ID variable
-  treat <- as.character(gl(n=3, k=n, length=N*n, labels=c("WL","TAU","INT")))  # create treatment variable
+  treat <- as.character(gl(n=3, k=n, length=N*n, labels=c("a","b","c")))  # create treatment variable
   dat0 <- data.frame(id, treat, t)  # combine into data frame
-  dat0$treat <- factor(dat0$treat, levels = c("WL", "TAU", "INT"))  # Forces "WL" as reference
+  dat0$treat <- factor(dat0$treat, levels = c("a", "b", "c"))  # Forces "a" as reference
   multinorm <- MASS::mvrnorm(n=2*N, mu=c(0,0), matrix(c(var.u0, cov, cov, var.u1), nrow=2, ncol=2))  # draw random effects
   
   # create missingness with survival function ----------------------------------
@@ -95,8 +95,8 @@ getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hyp
   e <- rnorm(N*n, 0, sqrt(var.e))  # error variance for H1
   
   # Create treatment contrast variables for modeling
-  treat_TAU <- as.numeric(treat == "TAU")
-  treat_INT <- as.numeric(treat == "INT")
+  treat_TAU <- as.numeric(treat == "b")
+  treat_INT <- as.numeric(treat == "c")
   
   beta2_TAU <- eff.sizes[1] * sqrt(var.u1) # create coefficient of interaction under H1 from effect size; beta2=0|H0
   beta3_INT <- eff.sizes[2] * sqrt(var.u1) + beta2_TAU # create coefficient of interaction under H1 from effect size; beta2=0|H0
@@ -114,7 +114,7 @@ getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hyp
   # fit MLM to dataset under H1
   models <- lme4::lmer(y ~ t + treat + t:treat + (1 + t | id), data = dat, REML=F, control = lme4::lmerControl(calc.derivs = F))  # fit MLM model under H1
   est <- models@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
-  names(est) <- c("WL", "TAU", "INT")
+  names(est) <- c("a", "b", "c")
   sig_WL <- as.matrix(vcov(models)[2,2])  # extract variance of estimates under H0  
   sig_TAU <- as.matrix(vcov(models)[5,5])  # extract variance of estimates under H0  
   sig_INT <- as.matrix(vcov(models)[6,6])  # extract variance of estimates under H0  
@@ -125,9 +125,9 @@ getbf_mis_mv <- function(dropout, distribution="weibull", params=list(.5,1), hyp
   bf_res <- bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=n_eff, 
                  hypothesis=hypothesis, group_parameters = 1, joint_parameters = 0)
   
-  bf_1c <- bf_res[["fit"]][["BF.c"]][1]
+  bf_c <- bf_res[["fit"]][["BF.c"]][1]
   bfs <- bf_res[["BFmatrix"]]
   PMPc <- bf_res[["fit"]][["PMPc"]][1]
 
-  return(output = list(bf_1c=bf_1c, PMPc=PMPc))
+  return(output = list(bf_c=bf_c, PMPc=PMPc))
 }
