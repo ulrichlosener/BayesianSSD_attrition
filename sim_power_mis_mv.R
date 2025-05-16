@@ -96,31 +96,30 @@ for(i in seq_along(seq_N)){
   print(i)
 }
 
-omega_0 <- omega0
 
 # Store in long data frames
 library(tidyr)
 dat_gamma_0.01_wide <- as.data.frame(results$gamma_0.01)
 dat_gamma_0.01_wide$N <- seq_N
-dat_gamma_0.01_wide$omega_0 <- omega_0
+dat_gamma_0.01_wide$omega_0 <- omega0
 dat_gamma_0.01_wide <- dat_gamma_0.01_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
 dat_gamma_0.01 <- gather(dat_gamma_0.01_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
 
 dat_gamma_0.2_wide <- as.data.frame(results$gamma_0.2)
 dat_gamma_0.2_wide$N <- seq_N
-dat_gamma_0.2_wide$omega_0 <- omega_0
+dat_gamma_0.2_wide$omega_0 <- omega0
 dat_gamma_0.2_wide <- dat_gamma_0.2_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
 dat_gamma_0.2 <- gather(dat_gamma_0.2_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
 
 dat_gamma_1_wide <- as.data.frame(results$gamma_1)
 dat_gamma_1_wide$N <- seq_N
-dat_gamma_1_wide$omega_0 <- omega_0
+dat_gamma_1_wide$omega_0 <- omega0
 dat_gamma_1_wide <- dat_gamma_1_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
 dat_gamma_1 <- gather(dat_gamma_1_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
 
 dat_gamma_5_wide <- as.data.frame(results$gamma_5)
 dat_gamma_5_wide$N <- seq_N
-dat_gamma_5_wide$omega_0 <- omega_0
+dat_gamma_5_wide$omega_0 <- omega0
 dat_gamma_5_wide <- dat_gamma_5_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
 dat_gamma_5 <- gather(dat_gamma_5_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
 
