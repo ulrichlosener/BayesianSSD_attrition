@@ -35,6 +35,8 @@ getbf_mis_mv <- function(N, dropout, distribution="weibull", params=list(.5,1), 
   if(!is.list(params)){stop("The input for the params argument must be a list")}
   if(distribution=="exponential" && length(params)!=1){stop("The exponential distribution requires only one parameter in the 'params' argument")}
   if((distribution=="weibull" | distribution=="linear-exponential" | distribution=="log-logistic" | distribution=="gompertz") && length(params)!=2){stop("The weibull, linear-exponential, log-logistic, and gompertz distribution require two parameters in the 'params' argument")}
+  if(distribution=="nonparametric" && length(params)!=length(t.points)){stop("In case of a nonparametric survival function, the number of 'params' must equal the number of timepoints")}
+  if(distribution=="nonparametric" && all(params == cummin(params))==F){stop("In case of a nonparametric survival function, the elements of 'params' must be monotonically decreasing")}
   
   n <- length(t.points)  # number of measurement occasions
   # create time variable t
@@ -81,7 +83,10 @@ getbf_mis_mv <- function(N, dropout, distribution="weibull", params=list(.5,1), 
         (exp((log(1-omega)/(exp(gamma)-1))*(exp(gamma*time)-1)))
       }
       survival <- gompertz(omega=params[[1]], gamma=params[[2]], time=t.prop)
+    } else if(distribution=="nonparametric"){
+      survival <- unlist(params)
     }
+    
     # compute hazard: (S_t - S_{t+1}) / S_t
     shifted_survival <- c(survival[-1], NA)  # drop first element and append NA
     hazard <- (survival - shifted_survival) / survival  
@@ -124,6 +129,9 @@ getbf_mis_mv <- function(N, dropout, distribution="weibull", params=list(.5,1), 
 
   bf_res <- bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=n_eff, 
                  hypothesis=hypothesis, group_parameters = 1, joint_parameters = 0)
+  
+  # extract number of different hypotheses to be evaluated
+  n_hyp <- length(gregexpr(";", hypothesis, fixed = TRUE)[[1]]) + 1
   
   bf_c <- bf_res[["fit"]][["BF.c"]][1]
   bfs <- bf_res[["BFmatrix"]]
