@@ -55,7 +55,7 @@ for(gamma in seq_gamma) {
       results[[gamma_name]][[omega_name]][i] <- getpower_mis_mv(
         m = 10000 ,
         params = list(omega, gamma),
-        dropout = F,
+        attrition = T,
         N = N,
         t.points = t.points,
         var.u0 = var.u0,
@@ -79,7 +79,7 @@ for(i in seq_along(seq_N)){
   omega0[i] <- getpower_mis_mv(
     m = 10000 ,
     params = list(omega, gamma),
-    dropout = FALSE,
+    attrition = FALSE,
     N = seq_N[i],
     t.points = t.points,
     var.u0 = var.u0,
@@ -202,9 +202,6 @@ dev.off()
 
 
 
-
-
-
 ###############################################################################
 # SIMULATION 2 - PMP
 
@@ -247,8 +244,7 @@ for(gamma in seq_gamma) {
       results[[gamma_name]][[omega_name]][i] <- getpower_mis_mv(
         m = 10000 ,
         params = list(omega, gamma),
-        distribution = "gompertz",
-        dropout = T,
+        attrition = "gompertz",
         N = N,
         t.points = t.points,
         var.u0 = var.u0,
@@ -273,8 +269,7 @@ for(i in seq_along(seq_N)){
   omega0[i] <- getpower_mis_mv(
     m = 10000 ,
     params = list(omega, gamma),
-    distribution = "gompertz",
-    dropout = F,
+    attrition = F,
     N = seq_N[i],
     t.points = t.points,
     var.u0 = var.u0,
@@ -380,3 +375,6 @@ dev.off()
 
 #saveRDS(list(results,omega0), "results_sim_power_mis_mv_final_pmp")
 
+res_pmp <- readRDS("results_sim_power_mis_mv_final_pmp")
+
+res_bf <- readRDS("results_sim_power_mis_mv_final")
