@@ -5,11 +5,11 @@
 library(future)
 library(future.apply)
 
-getpower_mis_mv <- function(attrition="weibull", params=list(.5,1), 
-                         m=1000, N=72, t.points=c(0,1,2,3,4), var.u0=0.0333, 
-                         var.u1=.1, var.e=.0262, cov=0, eff.sizes=c(.8,.8), 
-                         BFthres=5, fraction=1, beta1=0, log.grow=F, seed=NULL, 
-                         hypothesis="a>b>c", PMPthres=.9){
+getpower_mis_mv <- function(attrition="weibull", params=c(.5,1), 
+                         m=10, N=100, t.points=c(0,1,2,3,4), var.u0=0.03, 
+                         var.u1=.1, var.e=.02, cov=0, eff.sizes=c(0, .5, .5), 
+                         BFthres=5, fraction=1, log.grow=F, seed=NULL, 
+                         hypothesis="a<b<c", PMPthres=.9){
   
   if(!is.null(seed)) {set.seed(seed)}  # set user-specified seed for reproducibility
   
@@ -21,7 +21,7 @@ getpower_mis_mv <- function(attrition="weibull", params=list(.5,1),
                          params=params, hypothesis=hypothesis, t.points=t.points, 
                          var.u0=var.u0, var.u1=var.u1, cov=cov, var.e=var.e, 
                          eff.sizes=eff.sizes, fraction=fraction, log.grow=log.grow, 
-                         beta1=beta1, future.seed = TRUE)
+                         future.seed = TRUE)
   })
   
   plan(sequential)  # Reset plan to avoid unexpected parallel behavior later

@@ -78,7 +78,7 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
   u1 <- rep(multinorm[(nrow(multinorm)/2+1):(nrow(multinorm)),2], each=n) # random slopes
   e <- rnorm(N*n, 0, sqrt(var.e)) # error variance for H1
   
-  # Create treatment contrast variables for modeling
+  # Create treatment dummy variables 
   treat_TAU <- as.numeric(treat == "b")
   treat_INT <- as.numeric(treat == "c")
   
@@ -86,26 +86,25 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
   beta2_TAU <- unlist(eff.sizes[2]) * sqrt(var.u1) + beta1_WL # create coefficient of interaction for b from effect size
   beta3_INT <- unlist(eff.sizes[3]) * sqrt(var.u1) + beta2_TAU # create coefficient of interaction for c from effect size
   
-  y <- beta1_WL*t + u0 + beta2_TAU*treat_TAU*t + beta3_INT*treat_INT*t + u1*t + e # create outcome variable y under H1
-  if(attrition == T){
-    dat <- data.frame(dat0, y, hazard)
-    dat[dat$t.prop==1, "hazard"] <- NA # h(t_last) is undefined
+  y <- beta1_WL*t + u0 + beta2_TAU*treat_TAU*t + beta3_INT*treat_INT*t + u1*t + e # create outcome variable y 
+  
+  if(attrition != F){
+    dat <- data.frame(dat0, y, hazard=unlist(hazard))
     suppressWarnings(dat$mis <- rbinom(n=nrow(dat), size=1, prob=dat$hazard)) # suppress warning about NAs being produced
-    dat <- dat %>% group_by(id) %>% mutate(mis = ifelse(cumany(mis == 1), 1, mis))
+    dat <- data.frame(dat %>% group_by(id) %>% mutate(mis = ifelse(cumany(mis == 1), 1, mis)))
     dat$y[which(dat$mis==1)] <- NA
-  } else if (attrition == F){
+  } else {
     dat <- data.frame(dat0, y)
-    }
+  }
 
   # fit MLM to dataset
-  model <- lme4::lmer(y ~ t + treat + t:treat + (1 + t | id), data = dat, REML=F, control = lme4::lmerControl(calc.derivs = F))  # fit MLM model under H1
+  model <- lme4::lmer(formula = y ~ t + treat + t:treat + (1 + t | id), data = dat, REML=F, control = lme4::lmerControl(calc.derivs = F))  # fit MLM model under H1
   est <- model@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
   names(est) <- c("a", "b", "c")
   sig_WL <- as.matrix(vcov(model)[2,2])  # extract variance of estimates under H0  
   sig_TAU <- as.matrix(vcov(model)[5,5])  # extract variance of estimates under H0  
   sig_INT <- as.matrix(vcov(model)[6,6])  # extract variance of estimates under H0  
   
-  est
   # calculate N_eff
   n_eff <- get_neff_mis_mv(model=model, N=N, t.points=t.points, surviv=surviv)
 
