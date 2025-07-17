@@ -62,7 +62,7 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
     surviv <- survival(attrition, params, t.points)
     shifted_surviv <- lapply(surviv, function(x) {c(x[-1], NA)}) # drop first element and append NA to compute hazard
   } else if(attrition==F){
-    surviv <- rep(1, n)
+    surviv <- list(rep(1, n))
     shifted_surviv <- c(surviv[-1], NA)
   }
 
@@ -94,20 +94,22 @@ getbf_mis_mv <- function(N, attrition="weibull", params=list(.5,1), hypothesis="
     dat <- dat %>% group_by(id) %>% mutate(mis = ifelse(cumany(mis == 1), 1, mis))
     dat$y[which(dat$mis==1)] <- NA
   } else if (attrition == F){
-    dat <- data.frame(dat0, y)}
+    dat <- data.frame(dat0, y)
+    }
 
   # fit MLM to dataset
   model <- lme4::lmer(y ~ t + treat + t:treat + (1 + t | id), data = dat, REML=F, control = lme4::lmerControl(calc.derivs = F))  # fit MLM model under H1
-  est <- models@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
+  est <- model@beta[c(2,5,6)] # extract estimates of beta2 and beta3 under H0
   names(est) <- c("a", "b", "c")
   sig_WL <- as.matrix(vcov(model)[2,2])  # extract variance of estimates under H0  
   sig_TAU <- as.matrix(vcov(model)[5,5])  # extract variance of estimates under H0  
   sig_INT <- as.matrix(vcov(model)[6,6])  # extract variance of estimates under H0  
   
+  est
   # calculate N_eff
   n_eff <- get_neff_mis_mv(model=model, N=N, t.points=t.points, surviv=surviv)
 
-  bf_res <- bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=n_eff, 
+  bf_res <- bain(x=est, Sigma=list(sig_WL, sig_TAU, sig_INT), n=unlist(n_eff), 
                  hypothesis=hypothesis, group_parameters = 1, joint_parameters = 0)
   
   # extract number of different hypotheses to be evaluated

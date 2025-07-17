@@ -110,14 +110,17 @@ get_neff_mis_mv <- function(model, N, t.points, surviv) {
       return(list(N_eff[2,2], N_eff[5,5], N_eff[6,6]))
     })
 
+    return(list(N_eff_cond1 = res[[1]][1],
+                N_eff_cond2 = res[[2]][1],
+                N_eff_cond3 = res[[3]][1]
+    ))
     
-  return(list(N_eff_beta1 = sum(unlist(res[[1]][1]), unlist(res[[2]][1]), unlist(res[[3]][1])),
-              N_eff_beta2 = sum(unlist(res[[1]][2]), unlist(res[[2]][2]), unlist(res[[3]][2])),
-              N_eff_beta3 = sum(unlist(res[[1]][3]), unlist(res[[2]][3]), unlist(res[[3]][3]))
-  ))
+  # return(list(N_eff_beta1 = sum(unlist(res[[1]][1]), unlist(res[[2]][1]), unlist(res[[3]][1])),
+  #             N_eff_beta2 = sum(unlist(res[[1]][2]), unlist(res[[2]][2]), unlist(res[[3]][2])),
+  #             N_eff_beta3 = sum(unlist(res[[1]][3]), unlist(res[[2]][3]), unlist(res[[3]][3]))
+  # ))
     
-  }
-  else{
+  } else {
     # same pattern for all three groups
     for (k in n:1) {
       idx <- n - k + 1
@@ -151,9 +154,8 @@ get_neff_mis_mv <- function(model, N, t.points, surviv) {
     w <- var_betahat_indep / var_beta_hat
     N_eff <- w * N * n
     
-    return(list(N_eff_beta1 = N_eff[2,2],
-                N_eff_beta2 = N_eff[5,5],
-                N_eff_beta3 = N_eff[6,6]
-    ))
+    return(list(N_eff_cond1 = N_eff[2,2]/3,
+                N_eff_cond2 = N_eff[5,5]/3,
+                N_eff_cond3 = N_eff[6,6]/3))
   }
 }
