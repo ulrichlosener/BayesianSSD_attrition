@@ -6,7 +6,7 @@
 # Note that this function requires the packages "lme4" and "Matrix" to be installed
 
 
-get_neff_mis_mv <- function(model, N, t.points, survival) {
+get_neff_mis_mv <- function(model, N, t.points, surviv) {
   
   n <- length(t.points)
   
@@ -70,39 +70,90 @@ get_neff_mis_mv <- function(model, N, t.points, survival) {
   
   # Initialize sum matrices
   sum_mat <- sum_mat_indep <- matrix(0, 6, 6)
-  
-  # Backwards loop
-  for (k in n:1) {
-    idx <- n - k + 1
-    rows <- row_indices[[idx]]
-    inv <- inverses[[idx]]
+
+  # Compute sum matrices under dependence and independence assumption 
+  if(is.list(surviv) & length(surviv)>1){
+    # Backwards loop for each treatment group with unique survival pattern
+    res <- lapply(surviv, function(x) {
+      for (k in n:1) {
+        idx <- n - k + 1
+        rows <- row_indices[[idx]]
+        inv <- inverses[[idx]]
+        
+        # Get subset matrices
+        X_wl_sub <- X_wl[rows, , drop = FALSE]
+        X_tau_sub <- X_tau[rows, , drop = FALSE]
+        X_interv_sub <- X_interv[rows, , drop = FALSE]
+        
+        # Take sums for all three conditions
+        sum_mat <- sum_mat + x[k] * (
+          t(X_wl_sub) %*% inv$V_inv %*% X_wl_sub +
+            t(X_tau_sub) %*% inv$V_inv %*% X_tau_sub +
+            t(X_interv_sub) %*% inv$V_inv %*% X_interv_sub
+        )
+        
+        sum_mat_indep <- sum_mat_indep + x[k] * (
+          t(X_wl_sub) %*% inv$W_inv %*% X_wl_sub +
+            t(X_tau_sub) %*% inv$W_inv %*% X_tau_sub +
+            t(X_interv_sub) %*% inv$W_inv %*% X_interv_sub
+        )
+      }
+      
+      # Matrix solving with fallback to pseudoinverse
+      var_beta_hat <-  tryCatch(solve(sum_mat), error = function(e) MASS::ginv(sum_mat))
+      var_betahat_indep <-  tryCatch(solve(sum_mat_indep), error = function(e) MASS::ginv(sum_mat_indep))
+      
+      # Compute N_eff
+      w <- var_betahat_indep / var_beta_hat
+      N_eff <- w * (N/3) * n # divide N by 3 because of 3 conditions
+      
+      return(list(N_eff[2,2], N_eff[5,5], N_eff[6,6]))
+    })
+
     
-    # Get subset matrices
-    X_wl_sub <- X_wl[rows, , drop = FALSE]
-    X_tau_sub <- X_tau[rows, , drop = FALSE]
-    X_interv_sub <- X_interv[rows, , drop = FALSE]
+  return(list(N_eff_beta1 = sum(unlist(res[[1]][1]), unlist(res[[2]][1]), unlist(res[[3]][1])),
+              N_eff_beta2 = sum(unlist(res[[1]][2]), unlist(res[[2]][2]), unlist(res[[3]][2])),
+              N_eff_beta3 = sum(unlist(res[[1]][3]), unlist(res[[2]][3]), unlist(res[[3]][3]))
+  ))
     
-    # Accumulate sums for all three conditions
-    sum_mat <- sum_mat + survival[k] * (
-      t(X_wl_sub) %*% inv$V_inv %*% X_wl_sub +
-        t(X_tau_sub) %*% inv$V_inv %*% X_tau_sub +
-        t(X_interv_sub) %*% inv$V_inv %*% X_interv_sub
-    )
-    
-    sum_mat_indep <- sum_mat_indep + survival[k] * (
-      t(X_wl_sub) %*% inv$W_inv %*% X_wl_sub +
-        t(X_tau_sub) %*% inv$W_inv %*% X_tau_sub +
-        t(X_interv_sub) %*% inv$W_inv %*% X_interv_sub
-    )
   }
-  
-  # Matrix solving with fallback to pseudoinverse
-  var_beta_hat <- tryCatch(solve(sum_mat), error = function(e) MASS::ginv(sum_mat))
-  var_betahat_indep <- tryCatch(solve(sum_mat_indep), error = function(e) MASS::ginv(sum_mat_indep))
-  
-  # Compute N_eff
-  w <- var_betahat_indep / var_beta_hat
-  N_eff <- w * N * n
-  
-  return(c(N_eff[2,2], N_eff[5,5], N_eff[6,6]))
+  else{
+    # same pattern for all three groups
+    for (k in n:1) {
+      idx <- n - k + 1
+      rows <- row_indices[[idx]]
+      inv <- inverses[[idx]]
+      
+      # Get subset matrices
+      X_wl_sub <- X_wl[rows, , drop = FALSE]
+      X_tau_sub <- X_tau[rows, , drop = FALSE]
+      X_interv_sub <- X_interv[rows, , drop = FALSE]
+      
+      # Take sums for all three conditions
+      sum_mat <- sum_mat + surviv[[1]][k] * (
+        t(X_wl_sub) %*% inv$V_inv %*% X_wl_sub +
+          t(X_tau_sub) %*% inv$V_inv %*% X_tau_sub +
+          t(X_interv_sub) %*% inv$V_inv %*% X_interv_sub
+      )
+      
+      sum_mat_indep <- sum_mat_indep + surviv[[1]][k] * (
+        t(X_wl_sub) %*% inv$W_inv %*% X_wl_sub +
+          t(X_tau_sub) %*% inv$W_inv %*% X_tau_sub +
+          t(X_interv_sub) %*% inv$W_inv %*% X_interv_sub
+      )
+    }
+    
+    # Matrix solving with fallback to pseudoinverse
+    var_beta_hat <- tryCatch(solve(sum_mat), error = function(e) MASS::ginv(sum_mat))
+    var_betahat_indep <- tryCatch(solve(sum_mat_indep), error = function(e) MASS::ginv(sum_mat_indep))
+    
+    # Compute N_eff
+    w <- var_betahat_indep / var_beta_hat
+    N_eff <- w * N * n
+    
+    return(list(N_eff_beta1 = N_eff[2,2],
+                N_eff_beta2 = N_eff[5,5],
+                N_eff_beta3 = N_eff[6,6]
+    ))
+  }
 }
