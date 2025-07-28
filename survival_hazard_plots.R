@@ -9,9 +9,6 @@ library(gridExtra)
 weibull <- function(omega, gamma, time){ 
   (1-omega)^(time^gamma)
 }
-exponential <- function(omega, time){
-  (1-omega)^time
-}
 log_logistic <- function(omega, gamma, time){
   (1-omega)/((1-omega)+omega*time^gamma)
 }
@@ -26,7 +23,7 @@ gompertz <- function(omega, gamma, time){
 }
 
 # Parameters
-omega <- 0.5
+omega <- 0.75
 time_values <- seq(0, 1, length.out = 100)
 delta_t <- time_values[2] - time_values[1]  # Small time increment for hazard calculation
 
@@ -34,28 +31,25 @@ delta_t <- time_values[2] - time_values[1]  # Small time increment for hazard ca
 functions <- list(
   list(name = "Weibull", 
        func = weibull, 
-       params = list(gamma = c(3, 1, 0.3))),
-  
-  list(name = "Exponential", 
-       func = exponential, 
-       params = list()),
+       params = list(gamma = c(3, 1, 0.5))),
   
   list(name = "Log-Logistic", 
        func = log_logistic, 
-       params = list(gamma = c(2, 1, 0.2))),
+       params = list(gamma = c(2, 1, 0.7))),
   
   list(name = "Linear-Exponential", 
        func = linear_exponential, 
-       params = list(gamma = c(0.5, 0, -0.8))),
+       params = list(gamma = c(0.8, 0, -0.8))),
   
   list(name = "Modified-Weibull", 
        func = mod_weibull, 
-       params = list(gamma = c(2, 1, 0.1), kappa = 2)),  # kappa fixed 
+       params = list(gamma = c(2, 1, 0.5), kappa = .5)),  # kappa fixed 
   
   list(name = "Gompertz", 
        func = gompertz, 
        params = list(gamma = c(5, 0.5, -2)))
-)
+  )
+  
 
 # Function to calculate hazard rate
 calculate_hazard <- function(survival_values, delta_t) {
@@ -136,7 +130,9 @@ survival_plots <- all_data %>%
       theme_minimal() +
       ylim(0, 1) +
       scale_color_brewer(palette = "Dark2") +
-      theme(legend.position = "bottom",
+      theme(legend.position = c(.5, .15),
+            legend.background = element_rect(fill = "white", color = "black"),
+            legend.direction="horizontal",
             plot.title = element_text(size = 12, face = "bold"))
     
     if (n_distinct(.x$param_combo) == 1) {
@@ -163,7 +159,7 @@ hazard_plots <- all_data %>%
       theme_minimal() +
       scale_color_brewer(palette = "Dark2") +
       theme(legend.position = "bottom",
-            plot.title = element_text(size = 12, face = "bold"))
+            plot.title = element_text(size = 12, face = "bold")) 
     
     if (n_distinct(.x$param_combo) == 1) {
       p <- p + theme(legend.position = "none")
@@ -176,7 +172,6 @@ grid.arrange(survival_plots[[1]],
              survival_plots[[3]], 
              survival_plots[[4]],
              survival_plots[[5]], 
-             survival_plots[[6]],
              nrow=2)
 
 grid.arrange(hazard_plots[[1]], 
@@ -184,5 +179,4 @@ grid.arrange(hazard_plots[[1]],
              hazard_plots[[3]], 
              hazard_plots[[4]],
              hazard_plots[[5]], 
-             hazard_plots[[6]],
              nrow=2)
