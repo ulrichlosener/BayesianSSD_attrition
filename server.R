@@ -2,18 +2,20 @@
 
 server <- function(input, output) {
 
+  
+### Weibull function
  output$weibullplots <- renderPlot({
     
-    validate(need(input$D1>=3,"Duration of the study should be at least three."))
-    if(input$omega1<0 || input$omega1>1) {
+    validate(need(input$d_weib>=3,"Duration of the study should be at least three."))
+    if(input$omega_weib<0 || input$omega_weib>1) {
       validate("`Omega` should be between zero and one.")
     }
-    validate(need(input$gamma>=0,"`Gamma` should be positive."))
+    validate(need(input$gamma_weib>=0,"`Gamma` should be positive."))
     
-    omega <- input$omega1
-    gamma <- input$gamma
-    f <- input$f1
-    D <- input$D1
+    omega <- input$omega_weib
+    gamma <- input$gamma_weib
+    f <- input$f_weib
+    D <- input$d_weib
     t.points <- seq(0, D, by=1/f)
     time <- seq(0, 1, length=length(t.points))
     remain <- (1-omega)^time^gamma
@@ -28,6 +30,37 @@ server <- function(input, output) {
   plot(t.points,remain,type="b", pch=16, ylim=c(0,1), xlim=c(0,D), xlab="Measurement Occasion", ylab="probability", main="Survival Function")
   plot(t.points,hazard,type="b", pch=16, xlim=c(0,D), xlab="Measurement Occasion", ylab="Probability", main="Hazard Function")
     }, height=600)
+ 
+### Modified Weibull function
+ output$mod_weibullplots <- renderPlot({
+   
+   validate(need(input$d_weib>=3,"Duration of the study should be at least three."))
+   if(input$omega_weib<0 || input$omega_weib>1) {
+     validate("`Omega` should be between zero and one.")
+   }
+   validate(need(input$gamma_mod_weib>=0, "`Gamma` should be positive."))
+   validate(need(input$kappa_mod_weib>=0, "`Kappa` should be positive."))
+   
+   omega <- input$omega_mod_weib
+   gamma <- input$gamma_mod_weib
+   kappa <- input$kappa_mod_weib
+   f <- input$f_mod_weib
+   D <- input$d_mod_weib
+   t.points <- seq(0, D, by=1/f)
+   time <- seq(0, 1, length=length(t.points))
+   remain <- exp(time^gamma*exp(kappa*(time-1))*log(1-omega))
+
+   n <- length(remain)
+   
+   hazard <- rep(NA, n)
+   for(i in 1:(n-1)) {
+     hazard[i+1] <- round((remain[i]-remain[i+1])/remain[i], digits=7)
+   }
+   
+   par(mfrow=c(2,1))
+   plot(t.points,remain,type="b", pch=16, ylim=c(0,1), xlim=c(0,D), xlab="Measurement Occasion", ylab="probability", main="Survival Function")
+   plot(t.points,hazard,type="b", pch=16, xlim=c(0,D), xlab="Measurement Occasion", ylab="Probability", main="Hazard Function")
+ }, height=600)
  
  output$exponentialplots <- renderPlot({
    validate(need(input$D2>=3,"Duration of the study should be at least three."))

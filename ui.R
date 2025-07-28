@@ -63,10 +63,10 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   
                   nav_panel(title="Weibull", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("D1", "Duration of study", 5),
-                              numericInput("f1", "Frequency of observation", 1),
-                              numericInput("omega1", "Omega", .5, min = 0, max = 1, step = .1),
-                              numericInput("gamma", "Gamma", 3, min = 0, max = 100, step = .5)
+                              numericInput("d_weib", "Duration of study", 5),
+                              numericInput("f_weib", "Frequency of observation", 1),
+                              numericInput("omega_weib", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma_weib", "Gamma", 3, min = 0, max = 100, step = .5)
                             ),
                             fluidRow(column(width=6, plotOutput(outputId = "weibullplots")),
                                      column(width=6,
@@ -85,15 +85,62 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                                 ),
                                               tags$h4("Omega"),
                                                 tags$ul(
+                                                  tags$li("[0, 1]"),
                                                   tags$li("Proportion of participants that is expected to drop out at some point during the study")
                                                 ),
                                               tags$h4("Gamma"),
                                                 tags$ul(
-                                                  tags$li("Gamma: Hazard rate, determines whether dropout in concentrated towards the beginning (gamma < 1) or the end (gamma > 1) of a study"),
+                                                  tags$li("[0, inf]"),
+                                                  tags$li("Hazard rate, determines whether dropout in concentrated towards the beginning (gamma < 1) or the end (gamma > 1) of a study"),
                                                   tags$li("If gamma = 1, then the Weibull function equals the exponential function")
                                                 )
                                             )
                                       )
+                            )
+                            )
+                  ),
+                  nav_panel(title="Modified-Weibull", 
+                            layout_sidebar(sidebar = sidebar(
+                              numericInput("d_mod_weib", "Duration of study", 5),
+                              numericInput("f_mod_weib", "Frequency of observation", 1),
+                              numericInput("omega_mod_weib", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma_mod_weib", "Gamma", 1, min = 0, max = 100, step = .1),
+                              numericInput("kappa_mod_weib", "Kappa", 0.5, min = 0, max = 100, step = .1)
+                            ),
+                            fluidRow(column(width=6, plotOutput(outputId = "mod_weibullplots")),
+                                     column(width=6,
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                              tags$ul(
+                                                tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                tags$li("Must be at least three in this case")
+                                              ),
+                                              tags$h4("Frequency of observation"),
+                                              tags$ul(
+                                                tags$li("The number of observations taken per unit in time"),
+                                                tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                              ),
+                                              tags$h4("Omega"),
+                                              tags$ul(
+                                                tags$li("[0, 1]"),
+                                                tags$li("Proportion of participants that is expected to drop out at some point during the study")
+                                              ),
+                                              tags$h4("Gamma"),
+                                              tags$ul(
+                                                tags$li("[0, inf]"),
+                                                tags$li("Determines the shape of the hazard rate."),
+                                                tags$li("If gamma > 1, the hazard monotonically increases. If gamma < 1, hazard has a bathtub shape.")
+                                              ),
+                                              tags$h4("Kappa"),
+                                              tags$ul(
+                                                tags$li("[0, inf]"),
+                                                tags$li("Determines the shape of the hazard rate."),
+                                                tags$li("If gamma < 1, the lowest point of hazard is at t_min = (sqrt(gamma) - gamma) / kappa.")
+                                              )
+                                            )
+                                     )
                             )
                             )
                   ),
