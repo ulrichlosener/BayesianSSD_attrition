@@ -30,37 +30,7 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                             tags$br("")
                             ),
                   
-                  nav_panel(title="Exponential",
-                            layout_sidebar(sidebar = sidebar(
-                              numericInput("D2", "Duration of study", 5),
-                              numericInput("f2", "Frequency of observation", 1),
-                              numericInput("omega2", "Omega", .5, min = 0, max = 1, step = .1)
-                            ),
-                            fluidRow(column(width=6, plotOutput(outputId = "exponentialplots")),
-                                     column(width=6, 
-                                            tags$div(
-                                              tags$h1("Explanation of parameters"),
-                                              tags$h4("Duration of study"),
-                                              tags$ul(
-                                                tags$li("The total duration of the study in days, weeks, months, etc."),
-                                                tags$li("Must be at least three in this case")
-                                              ),
-                                              tags$h4("Frequency of observation"),
-                                              tags$ul(
-                                                tags$li("The number of observations taken per unit in time"),
-                                                tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
-                                                tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
-                                              ),
-                                              tags$h4("Omega"),
-                                              tags$ul(
-                                                tags$li("Proportion of participants that is expected to drop out at some point during the study")
-                                              )
-                                            )
-                                     )
-                            )
-                            )
-                  ),
-                  
+
                   nav_panel(title="Weibull", 
                             layout_sidebar(sidebar = sidebar(
                               numericInput("d_weib", "Duration of study", 5),
@@ -138,6 +108,120 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                                 tags$li("[0, inf]"),
                                                 tags$li("Determines the shape of the hazard rate."),
                                                 tags$li("If gamma < 1, the lowest point of hazard is at t_min = (sqrt(gamma) - gamma) / kappa.")
+                                              )
+                                            )
+                                     )
+                            )
+                            )
+                  ),
+                  nav_panel(title="Linear-Exponential", 
+                            layout_sidebar(sidebar = sidebar(
+                              numericInput("d_lin_exp", "Duration of study", 5),
+                              numericInput("f_lin_exp", "Frequency of observation", 1),
+                              numericInput("omega_lin_exp", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma_lin_exp", "Gamma", 0, min = -1, max = 1, step = .1)
+                            ),
+                            fluidRow(column(width=6, plotOutput(outputId = "lin_expplots")),
+                                     column(width=6,
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                              tags$ul(
+                                                tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                tags$li("Must be at least three in this case")
+                                              ),
+                                              tags$h4("Frequency of observation"),
+                                              tags$ul(
+                                                tags$li("The number of observations taken per unit in time"),
+                                                tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                              ),
+                                              tags$h4("Omega"),
+                                              tags$ul(
+                                                tags$li("[0, 1]"),
+                                                tags$li("Proportion of participants that is expected to drop out at some point during the study")
+                                              ),
+                                              tags$h4("Gamma"),
+                                              tags$ul(
+                                                tags$li("[-1, 1]"),
+                                                tags$li("Determines the shape of the hazard rate."),
+                                                tags$li("If gamma > 0, the hazard linearly increases. If gamma < 0, the hazard linearly decreases.")
+                                              )
+                                            )
+                                     )
+                            )
+                            )
+                  ),
+                  nav_panel(title="Log-Logistic", 
+                            layout_sidebar(sidebar = sidebar(
+                              numericInput("d_log", "Duration of study", 5),
+                              numericInput("f_log", "Frequency of observation", 1),
+                              numericInput("omega_log", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma_log", "Gamma", 1, min = 0, max = 100, step = .1)
+                            ),
+                            fluidRow(column(width=6, plotOutput(outputId = "logplots")),
+                                     column(width=6,
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                              tags$ul(
+                                                tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                tags$li("Must be at least three in this case")
+                                              ),
+                                              tags$h4("Frequency of observation"),
+                                              tags$ul(
+                                                tags$li("The number of observations taken per unit in time"),
+                                                tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                              ),
+                                              tags$h4("Omega"),
+                                              tags$ul(
+                                                tags$li("[0, 1]"),
+                                                tags$li("Proportion of participants that is expected to drop out at some point during the study")
+                                              ),
+                                              tags$h4("Gamma"),
+                                              tags$ul(
+                                                tags$li("[0, inf]"),
+                                                tags$li("Determines the shape of the hazard rate."),
+                                                tags$li("If gamma < 1, the hazard monotonically decreases. If gamma > 1, the hazard has a bell shape.")
+                                              )
+                                            )
+                                     )
+                            )
+                            )
+                  ),
+                  nav_panel(title="Gompertz", 
+                            layout_sidebar(sidebar = sidebar(
+                              numericInput("d_gomp", "Duration of study", 5),
+                              numericInput("f_gomp", "Frequency of observation", 1),
+                              numericInput("omega_gomp", "Omega", .5, min = 0, max = 1, step = .1),
+                              numericInput("gamma_gomp", "Gamma", 1, min = -100, max = 100, step = .1)
+                            ),
+                            fluidRow(column(width=6, plotOutput(outputId = "gompplots")),
+                                     column(width=6,
+                                            tags$div(
+                                              tags$h1("Explanation of parameters"),
+                                              tags$h4("Duration of study"),
+                                              tags$ul(
+                                                tags$li("The total duration of the study in days, weeks, months, etc."),
+                                                tags$li("Must be at least three in this case")
+                                              ),
+                                              tags$h4("Frequency of observation"),
+                                              tags$ul(
+                                                tags$li("The number of observations taken per unit in time"),
+                                                tags$li("If measurements are taken every two weeks, frequency = 0.5; if measurements are taken twice a day, frequency = 2"),
+                                                tags$li("Note that here, we assume the measurements to be equidistant, i.e., equally spaced in time ")
+                                              ),
+                                              tags$h4("Omega"),
+                                              tags$ul(
+                                                tags$li("[0, 1]"),
+                                                tags$li("Proportion of participants that is expected to drop out at some point during the study")
+                                              ),
+                                              tags$h4("Gamma"),
+                                              tags$ul(
+                                                tags$li("R \ {0}"),
+                                                tags$li("Determines the shape of the hazard rate."),
+                                                tags$li("If gamma > 0, the hazard exponentially increases. If gamma < 0, the hazard exponentially decreases.")
                                               )
                                             )
                                      )
