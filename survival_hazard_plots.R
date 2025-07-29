@@ -27,7 +27,7 @@ kappa_mod_weib <- 2
 kappa_mod_weib2 <- .1
 gamma_log <- c(2,1,.7)
 gamma_lin_exp <- c(.9, 0, -.9)
-gamma_gomp <- c(5, .5, -2)
+gamma_gomp <- c(5, .5, -5)
 
 
 # Create survival data for each distribution and convert to dataframes for plotting
@@ -175,7 +175,9 @@ p_weib <- ggplot(df_weib, aes(x = time, y = survival, color = gamma, linetype=ga
                   legend.background = element_rect(fill = "white", color = "black"),
                   legend.direction="horizontal",
                   legend.title = element_text(size=20),
-                  legend.key.size = unit(3,"line")) 
+                  legend.key.size = unit(2,"line"),
+                  title = element_text(face="bold"),
+                  axis.title = element_text(face="plain")) 
 
 p_mod_weib <- ggplot(df_mod_weib, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
                 geom_line(linewidth = 1.25) +
@@ -189,7 +191,10 @@ p_mod_weib <- ggplot(df_mod_weib, aes(x = time, y = survival, color = gamma, lin
                       legend.direction="horizontal",
                       legend.title = element_text(size=20),
                       legend.background = element_rect(fill = "white", color = "black"),
-                      legend.key.size = unit(3,"line"))
+                      legend.key.size = unit(2,"line"),
+                      title = element_text(face="bold"),
+                      plot.subtitle = element_text(size=15),
+                      axis.title = element_text(face="plain"))
               
 p_mod_weib2 <- ggplot(df_mod_weib2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
                   geom_line(linewidth = 1.25) +
@@ -203,7 +208,10 @@ p_mod_weib2 <- ggplot(df_mod_weib2, aes(x = time, y = survival, color = gamma, l
                         legend.direction="horizontal",
                         legend.title = element_text(size=20),
                         legend.background = element_rect(fill = "white", color = "black"),
-                        legend.key.size = unit(3,"line"))
+                        legend.key.size = unit(2,"line"),
+                        title = element_text(face="bold"),
+                        plot.subtitle = element_text(size=15),
+                        axis.title = element_text(face="plain"))
 
 p_log <- ggplot(df_log, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
           geom_line(linewidth = 1.25) +
@@ -216,7 +224,9 @@ p_log <- ggplot(df_log, aes(x = time, y = survival, color = gamma, linetype=gamm
                 legend.background = element_rect(fill = "white", color = "black"),
                 legend.direction="horizontal",
                 legend.title = element_text(size=20),
-                legend.key.size = unit(3,"line")) 
+                legend.key.size = unit(2,"line"),
+                title = element_text(face="bold"),
+                axis.title = element_text(face="plain")) 
         
 p_lin_exp <- ggplot(df_lin_exp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
               geom_line(linewidth = 1.25) +
@@ -229,7 +239,9 @@ p_lin_exp <- ggplot(df_lin_exp, aes(x = time, y = survival, color = gamma, linet
                     legend.background = element_rect(fill = "white", color = "black"),
                     legend.direction="horizontal",
                     legend.title = element_text(size=20),
-                    legend.key.size = unit(3,"line")) 
+                    legend.key.size = unit(2,"line"),
+                    title = element_text(face="bold"),
+                    axis.title = element_text(face="plain")) 
             
 p_gomp <- ggplot(df_gomp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
             geom_line(linewidth = 1.25) +
@@ -242,10 +254,14 @@ p_gomp <- ggplot(df_gomp, aes(x = time, y = survival, color = gamma, linetype=ga
                   legend.background = element_rect(fill = "white", color = "black"),
                   legend.direction="horizontal",
                   legend.title = element_text(size=20),
-                  legend.key.size = unit(3,"line")) 
+                  legend.key.size = unit(2,"line"),
+                  title = element_text(face="bold"),
+                  axis.title = element_text(face="plain")) 
 
-grid.arrange(p_weib, p_mod_weib, p_mod_weib2, p_log, p_lin_exp, p_gomp)
 
+pdf("survival_grid.pdf", width = 8, height=12)
+grid.arrange(p_weib, p_mod_weib, p_mod_weib2, p_log, p_lin_exp, p_gomp, nrow=3)
+dev.off()
 
 
 ######################## Make hazard plots #####################################
@@ -260,7 +276,9 @@ p_weib_haz <- ggplot(df_weib_haz, aes(x = time, y = survival, color = gamma, lin
                         legend.background = element_rect(fill = "white", color = "black"),
                         legend.direction="horizontal",
                         legend.title = element_text(size=20),
-                        legend.key.size = unit(3,"line")) +
+                        legend.key.size = unit(2,"line"),
+                        title = element_text(face="bold"),
+                        axis.title = element_text(face="plain")) +
                   ylim(c(0, .005))
 
 
@@ -275,7 +293,10 @@ p_mod_weib_haz <- ggplot(df_mod_weib_haz, aes(x = time, y = survival, color = ga
                           legend.direction="horizontal",
                           legend.title = element_text(size=20),
                           legend.background = element_rect(fill = "white", color = "black"),
-                          legend.key.size = unit(3,"line"))
+                          legend.key.size = unit(2,"line"),
+                          title = element_text(face="bold"),
+                          plot.subtitle = element_text(size=15),
+                          axis.title = element_text(face="plain"))
 
 p_mod_weib_haz2 <- ggplot(df_mod_weib_haz2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
                     geom_line(linewidth = 1.25) +
@@ -288,7 +309,10 @@ p_mod_weib_haz2 <- ggplot(df_mod_weib_haz2, aes(x = time, y = survival, color = 
                           legend.direction="horizontal",
                           legend.title = element_text(size=20),
                           legend.background = element_rect(fill = "white", color = "black"),
-                          legend.key.size = unit(3,"line")) +
+                          legend.key.size = unit(2,"line"),
+                          title = element_text(face="bold"),
+                          plot.subtitle = element_text(size=15),
+                          axis.title = element_text(face="plain")) +
                     ylim(c(0, .004))
 
 p_log_haz <- ggplot(df_log_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
@@ -301,7 +325,9 @@ p_log_haz <- ggplot(df_log_haz, aes(x = time, y = survival, color = gamma, linet
                     legend.background = element_rect(fill = "white", color = "black"),
                     legend.direction="horizontal",
                     legend.title = element_text(size=20),
-                    legend.key.size = unit(3,"line")) +
+                    legend.key.size = unit(2,"line"),
+                    title = element_text(face="bold"),
+                    axis.title = element_text(face="plain")) +
               ylim(c(0,.005))
 
 p_lin_exp_haz <- ggplot(df_lin_exp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
@@ -314,7 +340,9 @@ p_lin_exp_haz <- ggplot(df_lin_exp_haz, aes(x = time, y = survival, color = gamm
                         legend.background = element_rect(fill = "white", color = "black"),
                         legend.direction="horizontal",
                         legend.title = element_text(size=20),
-                        legend.key.size = unit(3,"line")) 
+                        legend.key.size = unit(2,"line"),
+                        title = element_text(face="bold"),
+                        axis.title = element_text(face="plain")) 
 
 p_gomp_haz <- ggplot(df_gomp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
                 geom_line(linewidth = 1.25) +
@@ -326,8 +354,10 @@ p_gomp_haz <- ggplot(df_gomp_haz, aes(x = time, y = survival, color = gamma, lin
                       legend.background = element_rect(fill = "white", color = "black"),
                       legend.direction="horizontal",
                       legend.title = element_text(size=20),
-                      legend.key.size = unit(3,"line")) +
-                ylim(0,.005)
+                      legend.key.size = unit(2,"line"),
+                      title = element_text(face="bold"),
+                      axis.title = element_text(face="plain")) +
+                ylim(0,.0075)
 
 grid.arrange(p_weib_haz, p_mod_weib_haz, p_mod_weib_haz2, p_log_haz, p_lin_exp_haz, p_gomp_haz)
 
