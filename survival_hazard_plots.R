@@ -6,26 +6,27 @@ n <- length(time)
 weibull <- function(omega, gamma, time){ 
   (1-omega)^(time^gamma)
 }
+mod_weibull <- function(omega, gamma, kappa, time){
+  exp(time^gamma*exp(kappa*(time-1))*log(1-omega))
+}
 log_logistic <- function(omega, gamma, time){
   (1-omega)/((1-omega)+omega*time^gamma)
 }
 linear_exponential <- function(omega, gamma, time){
   exp((0.5*gamma+log(1-omega))*time-0.5*gamma*time^2)
 }
-mod_weibull <- function(omega, gamma, kappa, time){
-  exp(time^gamma*exp(kappa*(time-1))*log(1-omega))
-}
 gompertz <- function(omega, gamma, time){
   exp((log(1-omega)/(exp(gamma)-1))*(exp(gamma*time)-1))
 }
 
-# Parameters
+# Illustrative parameters
 omega <- .75
 gamma_weib <- c(3, 1, .5)
-gamma_mod_weib <- c(2,1,.5)
-kappa_mod_weib <- .5
+gamma_mod_weib <- c(2,1.5,.5)
+kappa_mod_weib <- 2
+kappa_mod_weib2 <- .1
 gamma_log <- c(2,1,.7)
-gamma_lin_exp <- c(.8, 0, -.8)
+gamma_lin_exp <- c(.9, 0, -.9)
 gamma_gomp <- c(5, .5, -2)
 
 
@@ -47,6 +48,16 @@ for(i in 1:length(gamma_mod_weib)){
 df_mod_weib <- data.frame(
   time = rep(time, length(gamma_mod_weib)),
   survival = unlist(survival_mod_weib),
+  gamma = as.factor(rep(gamma_mod_weib, each = length(time)))
+)
+
+survival_mod_weib2 <- list()
+for(i in 1:length(gamma_mod_weib)){
+  survival_mod_weib2[[i]] <- mod_weibull(omega, gamma_mod_weib[i], kappa_mod_weib2, time)
+}
+df_mod_weib2 <- data.frame(
+  time = rep(time, length(gamma_mod_weib)),
+  survival = unlist(survival_mod_weib2),
   gamma = as.factor(rep(gamma_mod_weib, each = length(time)))
 )
 
@@ -110,6 +121,16 @@ df_mod_weib_haz <- data.frame(
   gamma = as.factor(rep(gamma_mod_weib, each = length(time)))
 )
 
+hazard_mod_weib2 <- list()
+for(i in 1:length(gamma_mod_weib)){
+  hazard_mod_weib2[[i]] <- calculate_hazard(survival_mod_weib2[[i]])
+}
+df_mod_weib_haz2 <- data.frame(
+  time = rep(time, length(gamma_mod_weib)),
+  survival = unlist(hazard_mod_weib2),
+  gamma = as.factor(rep(gamma_mod_weib, each = length(time)))
+)
+
 hazard_log <- list()
 for(i in 1:length(gamma_log)){
   hazard_log[[i]] <- calculate_hazard(survival_log[[i]])
@@ -143,44 +164,172 @@ df_gomp_haz <- data.frame(
 
 ######################## Make survival plots ###################################
 
-ggplot(df_weib, aes(x = time, y = survival, color = gamma)) +
-  geom_line(linewidth = 1) +
-  labs(title = "Weibull Survival Function",
-       x = "Time", y = "Survival Probability") +
-  theme_minimal() +
-  scale_color_brewer(palette = "Dark2") +
-  theme(legend.position = c(0.5, 0.15),
-        legend.direction="horizontal",
-        legend.title = element_blank(),
-        legend.background = element_rect(fill = "white", color = "black"))
+p_weib <- ggplot(df_weib, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+            geom_line(linewidth = 1.25) +
+            labs(title = "Weibull Survival Function",
+                 x = "Time (proportion)", y = "Survival Probability",
+                 color=expression(gamma), linetype=expression(gamma)) +
+            ylim(c(0,1)) +
+            theme_minimal() +
+            theme(legend.position = c(0.5, 0.15),
+                  legend.background = element_rect(fill = "white", color = "black"),
+                  legend.direction="horizontal",
+                  legend.title = element_text(size=20),
+                  legend.key.size = unit(3,"line")) 
 
+p_mod_weib <- ggplot(df_mod_weib, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                geom_line(linewidth = 1.25) +
+                labs(title = "Modified Weibull Survival Function",
+                     subtitle = expression(kappa*" = 2"),
+                     x = "Time (proportion)", y = "Survival Probability",
+                     color=expression(gamma), linetype=expression(gamma)) +
+                ylim(c(0,1)) +
+                theme_minimal() +
+                theme(legend.position = c(0.5, 0.15),
+                      legend.direction="horizontal",
+                      legend.title = element_text(size=20),
+                      legend.background = element_rect(fill = "white", color = "black"),
+                      legend.key.size = unit(3,"line"))
+              
+p_mod_weib2 <- ggplot(df_mod_weib2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                  geom_line(linewidth = 1.25) +
+                  labs(title = "Modified Weibull Survival Function",
+                       subtitle = expression(kappa*" = 0.1"),
+                       x = "Time (proportion)", y = "Survival Probability",
+                       color=expression(gamma), linetype=expression(gamma)) +
+                  ylim(c(0,1)) +
+                  theme_minimal() +
+                  theme(legend.position = c(0.5, 0.15),
+                        legend.direction="horizontal",
+                        legend.title = element_text(size=20),
+                        legend.background = element_rect(fill = "white", color = "black"),
+                        legend.key.size = unit(3,"line"))
 
-ggplot(df_mod_weib, aes(x = time, y = survival, color = gamma)) +
-  geom_line(linewidth = 1) +
-  labs(title = "Weibull Survival Function",
-       x = "Time", y = "Survival Probability") +
-  theme_minimal() +
-  scale_color_brewer(palette = "Dark2") +
-  theme(legend.position = c(0.5, 0.15),
-        legend.direction="horizontal",
-        legend.title = element_blank(),
-        legend.background = element_rect(fill = "white", color = "black"))
+p_log <- ggplot(df_log, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+          geom_line(linewidth = 1.25) +
+          labs(title = "Log_Logistic Survival Function",
+               x = "Time (proportion)", y = "Survival Probability",
+               color=expression(gamma), linetype=expression(gamma)) +
+          ylim(c(0,1)) +
+          theme_minimal() +
+          theme(legend.position = c(0.5, 0.15),
+                legend.background = element_rect(fill = "white", color = "black"),
+                legend.direction="horizontal",
+                legend.title = element_text(size=20),
+                legend.key.size = unit(3,"line")) 
+        
+p_lin_exp <- ggplot(df_lin_exp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+              geom_line(linewidth = 1.25) +
+              labs(title = "Linear-Exponential Survival Function",
+                   x = "Time (proportion)", y = "Survival Probability",
+                   color=expression(gamma), linetype=expression(gamma)) +
+              ylim(c(0,1)) +
+              theme_minimal() +
+              theme(legend.position = c(0.5, 0.15),
+                    legend.background = element_rect(fill = "white", color = "black"),
+                    legend.direction="horizontal",
+                    legend.title = element_text(size=20),
+                    legend.key.size = unit(3,"line")) 
+            
+p_gomp <- ggplot(df_gomp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+            geom_line(linewidth = 1.25) +
+            labs(title = "Gompertz Survival Function",
+                 x = "Time (proportion)", y = "Survival Probability",
+                 color=expression(gamma), linetype=expression(gamma)) +
+            ylim(c(0,1)) +
+            theme_minimal() +
+            theme(legend.position = c(0.5, 0.15),
+                  legend.background = element_rect(fill = "white", color = "black"),
+                  legend.direction="horizontal",
+                  legend.title = element_text(size=20),
+                  legend.key.size = unit(3,"line")) 
 
-
-
-
-
-
-
-
-
-
+grid.arrange(p_weib, p_mod_weib, p_mod_weib2, p_log, p_lin_exp, p_gomp)
 
 
 
 ######################## Make hazard plots #####################################
 
+p_weib_haz <- ggplot(df_weib_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                  geom_line(linewidth = 1.25) +
+                  labs(title = "Weibull Hazard Function",
+                       x = "Time (proportion)", y = "Hazard Probability",
+                       color=expression(gamma), linetype=expression(gamma)) +
+                  theme_minimal() +
+                  theme(legend.position = c(0.5, 0.8),
+                        legend.background = element_rect(fill = "white", color = "black"),
+                        legend.direction="horizontal",
+                        legend.title = element_text(size=20),
+                        legend.key.size = unit(3,"line")) +
+                  ylim(c(0, .005))
 
+
+p_mod_weib_haz <- ggplot(df_mod_weib_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                    geom_line(linewidth = 1.25) +
+                    labs(title = "Modified Weibull Hazard Function",
+                         subtitle = expression(kappa*" = 2"),
+                         x = "Time (proportion)", y = "Hazard Probability",
+                         color=expression(gamma), linetype=expression(gamma)) +
+                    theme_minimal() +
+                    theme(legend.position = c(0.5, 0.8),
+                          legend.direction="horizontal",
+                          legend.title = element_text(size=20),
+                          legend.background = element_rect(fill = "white", color = "black"),
+                          legend.key.size = unit(3,"line"))
+
+p_mod_weib_haz2 <- ggplot(df_mod_weib_haz2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                    geom_line(linewidth = 1.25) +
+                    labs(title = "Modified Weibull Hazard Function",
+                         subtitle = expression(kappa*" = 0.1"),
+                         x = "Time (proportion)", y = "Hazard Probability",
+                         color=expression(gamma), linetype=expression(gamma)) +
+                    theme_minimal() +
+                    theme(legend.position = c(0.5, 0.8),
+                          legend.direction="horizontal",
+                          legend.title = element_text(size=20),
+                          legend.background = element_rect(fill = "white", color = "black"),
+                          legend.key.size = unit(3,"line")) +
+                    ylim(c(0, .004))
+
+p_log_haz <- ggplot(df_log_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+              geom_line(linewidth = 1.25) +
+              labs(title = "Log_Logistic Hazard Function",
+                   x = "Time (proportion)", y = "Hazard Probability",
+                   color=expression(gamma), linetype=expression(gamma)) +
+              theme_minimal() +
+              theme(legend.position = c(0.5, 0.8),
+                    legend.background = element_rect(fill = "white", color = "black"),
+                    legend.direction="horizontal",
+                    legend.title = element_text(size=20),
+                    legend.key.size = unit(3,"line")) +
+              ylim(c(0,.005))
+
+p_lin_exp_haz <- ggplot(df_lin_exp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                  geom_line(linewidth = 1.25) +
+                  labs(title = "Linear-Exponential Hazard Function",
+                       x = "Time (proportion)", y = "Hazard Probability",
+                       color=expression(gamma), linetype=expression(gamma)) +
+                  theme_minimal() +
+                  theme(legend.position = c(0.5, 0.8),
+                        legend.background = element_rect(fill = "white", color = "black"),
+                        legend.direction="horizontal",
+                        legend.title = element_text(size=20),
+                        legend.key.size = unit(3,"line")) 
+
+p_gomp_haz <- ggplot(df_gomp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
+                geom_line(linewidth = 1.25) +
+                labs(title = "Gompertz Hazard Function",
+                     x = "Time (proportion)", y = "Hazard Probability",
+                     color=expression(gamma), linetype=expression(gamma)) +
+                theme_minimal() +
+                theme(legend.position = c(0.5, 0.8),
+                      legend.background = element_rect(fill = "white", color = "black"),
+                      legend.direction="horizontal",
+                      legend.title = element_text(size=20),
+                      legend.key.size = unit(3,"line")) +
+                ylim(0,.005)
+
+grid.arrange(p_weib_haz, p_mod_weib_haz, p_mod_weib_haz2, p_log_haz, p_lin_exp_haz, p_gomp_haz)
 
 
 
