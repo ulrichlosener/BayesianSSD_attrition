@@ -9,32 +9,37 @@ library(bslib)
 
 ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   nav_panel(title="Introduction",
-                            tags$head(tags$script(type = "text/javascript", src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")),
-                            tags$h1("Modelling attrition patterns in longitudinal trials using survival functions"),
-                            tags$p("Attrition refers to the drop-out of participants during the course of a study. This results in a loss of information that can have large negative effects on statistical power. Therefore, one should take expected drop-out rates into account when performing sample size determination (SSD) to avoid underpowered studies (Moerbeek, 2020). For SSD for longitudinal trials, this can be done by modelling the expected attrition pattern via a survival function. To do this, we make a number of assumptions:"),
-                            tags$ol(
-                              tags$li("Individuals who dropped out do not re-enter the study at a later point in time."),
-                              tags$li("Although the underlying time variable is continuous, we can only observe dropout when a measurement is taken. This means that the time variable in the plots is discrete."),
-                              tags$li("The chance of drop-out depends on the amount of time elapsed since the start of the study but not on the number of measurement occasions taken so far.")
-                            ),
-                            tags$h4("Survival probability functions and hazard probability functions"),
-                            tags$p("The survival function denotes the probability of remaining in the study up until measurement occasion j and is denoted as $$S(j)=P(J \\geq j),$$ where J represents the number of measurement occasions that an individual has completed without dropping out. Thus, the survival probability function is a discrete distribution showing the probability of having remained in the study up until measurement occasion j (where j = 0, 1, 2, ..., n). The graph of this function can be interpreted as the expected proportion of individuals who dropped so far for each measurement occasion j. The hazard function, on the other hand, is a conditional discrete distribution representing the probability of an individual dropping out at measurement occasion j, given that they have remained in the study up until j - 1 and is defined as $$h(j)=\\frac{S(j)-S(j+1)}{S(j)}.$$ The graph of this function can therefore be interpreted as the probability of an individual dropping out between measurement occasion j - 1 and j."),
-                            tags$h4("Exponential survival function"),
-                            tags$p("After rescaling j to represent the proportion of measurement occasions taken in a study, the exponential survival function is defined as $$S_{exponential}(j)=(1-\\omega)^j,$$ where omega [0,1] represents the proportion of participants who remain in the study without dropping out. When modelling attrition with the exponential probability function, one assumes that the hazard probability is constant, meaning that the chances of having dropped out are the same at each measurement occasion j. This is illustrated by the fact that the slope of the exponential hazard probability function is always equals zero, h’(j) = 0."),
-                            tags$h4("Weibull survival function"),
-                            tags$p("The Weibull survival function can be seen as a generalization of the exponential function where j is given an exponent, gamma. It is defined as $$S_{weibull}(j)={(1-\\omega)^j}^\\gamma$$ where gamma [0,INF] denotes the slope of the hazard function. It can be seen that if gamma = 0, then the Weibull function reduces to the exponential function. For gamma > 1, the slope of the hazard function is positive, meaning that attrition is higher towards the end of the study. For gamma < 1, the slope of the hazard function is negative, meaning that drop-out is higher at the beginning of the study."),
-                            tags$h4("This ShinyApp"),
-                            tags$p("At the top of the page, you can navigate to the survival function suitable to model the expected pattern of attrition in you trial. The plots visualize both the survival and the hazard function, giving a visual impression of the effect of altering the parameters of the functions. The function to perform Bayesian SSD for longitudinal trials can be found in this GitHub repository: https://github.com/ulrichlosener/BayesianSSD_attrition."),
-                            tags$h4("References"),
-                            tags$p("Moerbeek, M. (2020). The cluster randomized crossover trial: The effects of attrition in the AB/BA design and how to account for it in sample size calculations. Clinical Trials, 17(4), 420-429."),
-                            tags$br("")
+                                tags$head(tags$script(type = "text/javascript", src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js")),
+                                tags$h1("Modelling attrition patterns in longitudinal trials using survival functions"),
+                                p("Attrition refers to the drop-out of participants during the course of a study. This results in a loss of information that can have large negative effects on statistical power. Therefore, one should take expected drop-out rates into account when performing sample size determination (SSD) to avoid underpowered studies (Moerbeek, 2020). Suppose we want to measure N individuals n times for the purpose of testing hypotheses about a potential treatment effect over time and want to take expected attrition into account in our SSD. This can be done by modelling the expected attrition pattern via a survival function. To do this, we make a number of assumptions:"),
+                                tags$ol(
+                                  tags$li("Individuals who dropped out do not re-enter the study at a later point in time."),
+                                  tags$li("Although the underlying time variable is continuous, we can only observe dropout when a measurement is taken. This means that the time variable in the plots is discrete."),
+                                  tags$li("The chance of drop-out depends on the amount of time elapsed since the start of the study but not on the number of measurement occasions taken so far.")
+                                ),
+                                tags$h4("Survival probability functions and hazard probability functions"),
+                                p("The discrete survival function denotes the probability of remaining in the study up until measurement occasion j and is denoted as $$S(j)=P(J \\geq j),$$ where J represents the number of measurement occasions that an individual has completed without dropping out. Thus, the survival probability function is a discrete distribution showing the probability of having remained in the study up until measurement occasion j (where j = 0, 1, 2, ..., n). The graph of this function can be interpreted as the expected proportion of individuals who dropped so far for each measurement occasion j. The hazard function, on the other hand, is a conditional discrete distribution representing the probability of an individual dropping out at measurement occasion j, given that they have remained in the study up until j - 1 and is defined as $$h(j)=\\frac{S(j)-S(j+1)}{S(j)}.$$ The graph of this function can therefore be interpreted as the probability of an individual which has thus far remained in the study dropping out between measurement occasion j - 1 and j. Note that for convenience, we rescale j to represent the proportion of measurement occasions taken in a study from this point forward."),
+                                tags$h4("Weibull survival function"),
+                                p("The Weibull survival function is defined as $$S_{weibull}(j)={(1-\\omega)^j}^\\gamma$$ where omega [0, 1] represents the proportion of participants who never drop out of the study and gamma [0, inf] denotes the slope of the hazard function. If gamma = 0, the Weibull function reduces to the exponential function and has a constant hazard rate. For gamma > 1, the slope of the hazard function is positive, meaning that attrition is higher towards the end of the study. For gamma < 1, the slope of the hazard function is negative, meaning that drop-out is higher at the beginning of the study."),
+                                tags$h4("Modified Weibull survival function"),
+                                p("The Modified Weibull survival function is defined as $$S_{weibull}(j)=e^{j \\gamma e^{\\kappa (j-1)}log(1 - \\omega)}$$ where omega [0, 1] represents the proportion of participants who never drop out of the study and gamma and kappa [0, inf] are shape parameters. If gamma > 0, the hazard monotonically increases, meaning that attrition is higher towards the end of the study. If gamma < 0, the hazard rate has a bathtub shape with turning point at $$j_{min}=(\\sqrt\\gamma - \\gamma)/ \\kappa.$$ meaning that dropout is highest in the beginning and at the end of a study."),
+                                tags$h4("Log-Logistic survival function"),
+                                p("The Log-Logistic survival function is defined as $$S_{log-logistic}(j)=\\frac{1 - \\omega}{1 - \\omega + \\omega j^\\gamma}$$ where omega [0, 1] represents the proportion of participants who never drop out of the study and gamma [0, inf] denotes the shape of the hazard function. If gamma < 1, the hazard rate monotonically decreases, meaning that attrition is concentrated at towards the beginning of the study. For gamma < 1, the hazard rate is bell-shaped with its peak at $$j_{max}=\\frac{(\\gamma - 1)^{1 / \\gamma}}{(\\omega / (1 - \\omega))^{1/\\gamma}}$$ meaning that dropout is concentrated somewhere halfway through the study."),
+                                tags$h4("Linear-Exponential survival function"),
+                                p("The Linear-Exponential survival function is defined as $$S_{linear-exponential}(j)=e^{(0.5 \\gamma + log(1 - \\omega))j - 0.5 \\gamma j^2}$$ where omega [0, 1] represents the proportion of participants who never drop out of the study and gamma [-1, 1] determines the shape of the distribution. If gamma > 0, the slope of the hazard function is linearly positive, meaning that attrition is higher towards the end of the study. If gamma < 0, the slope of the hazard function is linearly negative, meaning that drop-out is higher at the beginning of the study."),
+                                tags$h4("Gompertz survival function"),
+                                p("The Gompertz survival function is defined as $$S_{gompertz}(j)=e^{(log(1 - \\omega)/(e^\\gamma - 1))(e^{\\gamma j} - 1)}$$ where omega [0, 1] represents the proportion of participants who never drop out of the study and gamma ≠ 0 denotes the shape of the hazard function. If gamma > 0, the slope of the hazard function is exponentially positive, meaning that attrition is higher towards the end of the study. If gamma < 0, the slope of the hazard function is exponentially negative, meaning that drop-out is higher at the beginning of the study."),
+                                tags$h4("This ShinyApp"),
+                                p("At the top of the page, you can navigate to the survival function suitable to model the expected pattern of attrition in you trial. The plots visualize both the survival and the hazard function, giving a visual impression of the effect of altering the parameters of the functions. The open-access R function to perform Bayesian SSD for longitudinal trials with attrition can be found in this GitHub repository: https://github.com/ulrichlosener/BayesianSSD_attrition."),
+                                tags$h4("References"),
+                                p("Moerbeek, M. (2020). The cluster randomized crossover trial: The effects of attrition in the AB/BA design and how to account for it in sample size calculations. Clinical Trials, 17(4), 420-429."),
+                                tags$br("")
                             ),
                   
-
                   nav_panel(title="Weibull", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("d_weib", "Duration of study", 5),
-                              numericInput("f_weib", "Frequency of observation", 1),
+                              numericInput("d_weib", "Duration of study", 10),
+                              numericInput("f_weib", "Frequency of observation", 2),
                               numericInput("omega_weib", "Omega", .5, min = 0, max = 1, step = .1),
                               numericInput("gamma_weib", "Gamma", 3, min = 0, max = 100, step = .5)
                             ),
@@ -71,8 +76,8 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   ),
                   nav_panel(title="Modified-Weibull", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("d_mod_weib", "Duration of study", 5),
-                              numericInput("f_mod_weib", "Frequency of observation", 1),
+                              numericInput("d_mod_weib", "Duration of study", 10),
+                              numericInput("f_mod_weib", "Frequency of observation", 2),
                               numericInput("omega_mod_weib", "Omega", .5, min = 0, max = 1, step = .1),
                               numericInput("gamma_mod_weib", "Gamma", 1, min = 0, max = 100, step = .1),
                               numericInput("kappa_mod_weib", "Kappa", 0.5, min = 0, max = 100, step = .1)
@@ -116,8 +121,8 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   ),
                   nav_panel(title="Linear-Exponential", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("d_lin_exp", "Duration of study", 5),
-                              numericInput("f_lin_exp", "Frequency of observation", 1),
+                              numericInput("d_lin_exp", "Duration of study", 10),
+                              numericInput("f_lin_exp", "Frequency of observation", 2),
                               numericInput("omega_lin_exp", "Omega", .5, min = 0, max = 1, step = .1),
                               numericInput("gamma_lin_exp", "Gamma", 0, min = -1, max = 1, step = .1)
                             ),
@@ -154,8 +159,8 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   ),
                   nav_panel(title="Log-Logistic", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("d_log", "Duration of study", 5),
-                              numericInput("f_log", "Frequency of observation", 1),
+                              numericInput("d_log", "Duration of study", 10),
+                              numericInput("f_log", "Frequency of observation", 2),
                               numericInput("omega_log", "Omega", .5, min = 0, max = 1, step = .1),
                               numericInput("gamma_log", "Gamma", 1, min = 0, max = 100, step = .1)
                             ),
@@ -192,8 +197,8 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                   ),
                   nav_panel(title="Gompertz", 
                             layout_sidebar(sidebar = sidebar(
-                              numericInput("d_gomp", "Duration of study", 5),
-                              numericInput("f_gomp", "Frequency of observation", 1),
+                              numericInput("d_gomp", "Duration of study", 10),
+                              numericInput("f_gomp", "Frequency of observation", 2),
                               numericInput("omega_gomp", "Omega", .5, min = 0, max = 1, step = .1),
                               numericInput("gamma_gomp", "Gamma", 1, min = -100, max = 100, step = .1)
                             ),
@@ -219,7 +224,7 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                               ),
                                               tags$h4("Gamma"),
                                               tags$ul(
-                                                tags$li("R \ {0}"),
+                                                tags$li("gamma ≠ 0"),
                                                 tags$li("Determines the shape of the hazard rate."),
                                                 tags$li("If gamma > 0, the hazard exponentially increases. If gamma < 0, the hazard exponentially decreases.")
                                               )
@@ -239,7 +244,7 @@ ui <- page_navbar(title ="Attrition", bg = "#ffd800",
                                                ),
                               conditionalPanel(condition = "input.option == 'opt2'",
                                                textInput("meas.occ", "Measurement occasions (comma delimited)", "0, 1, 2, 5, 8, 9, 10"),
-                                               textInput("hazard.hand", "Expected risk of dropping between measurement occasion j and j-1, h(j)", ".1, .15, .2, .25, .3, .5"),
+                                               textInput("hazard.hand", "h(j), Expected risk of dropping between measurement occasion j and j-1", ".1, .15, .2, .25, .3, .5"),
                                                )
                             ), 
                             fluidRow(column(width=6, plotOutput(outputId = "hand.plots")),

@@ -158,6 +158,7 @@ server <- function(input, output) {
    if(input$option == "opt1") {
        t.points.hand <- as.numeric(unlist(strsplit(input$meas.occ,",")))
        surv.hand <- as.numeric(unlist(strsplit(input$survival.hand,",")))
+       validate(need(length(t.points.hand) == length(surv.hand),"The number of measurement occasions must be equal to the length of S(j)."))
        validate(need(is.unsorted(rev(surv.hand)) == FALSE, "The expected proportion of participants remaining can never increase as we assume that participants who dropped out cannot re-enter the study at a later point in time."))
        n <- length(t.points.hand)
        hazard <- rep(NA, n)
@@ -173,6 +174,7 @@ server <- function(input, output) {
    } else if(input$option == "opt2") {
        t.points.hand <- as.numeric(unlist(strsplit(input$meas.occ,",")))
        haz.hand <- as.numeric(unlist(strsplit(input$hazard.hand,",")))
+       validate(need(length(t.points.hand) == length(haz.hand)+1,"The number of measurement occasions must be equal to the length of h(j) + 1."))
        n <- length(t.points.hand)
        survival <- c(1, rep(NA, (n-1)))
        for(i in 2:n){
