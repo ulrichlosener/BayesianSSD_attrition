@@ -143,7 +143,7 @@ get_neff_mis_mv <- function(model, N, t.points, surviv) {
         t(X_wl_sub) %*% inv$W_inv %*% X_wl_sub +
           t(X_tau_sub) %*% inv$W_inv %*% X_tau_sub +
           t(X_interv_sub) %*% inv$W_inv %*% X_interv_sub
-      )
+      ) 
     }
     
     # Matrix solving with fallback to pseudoinverse
