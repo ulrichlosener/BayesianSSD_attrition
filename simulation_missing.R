@@ -2,7 +2,6 @@
 
 library(BayeSSD)
 
-
 # Arguments to function
 t.points <- c(0,1,2,3,4)
 var.u0 <- 0.01 
@@ -112,17 +111,8 @@ p_gamma_0.01 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
-    # legend.key.size = unit(2.5, "lines"),      # Large legend keys (symbols)
-    # legend.text = element_text(size = 12),     # Large legend text
-    # legend.title = element_text(size = 14),    # Large legend title (if exists)
-    # legend.spacing.y = unit(0.2, "cm"),        # Spacing between legend items
-    # legend.background = element_rect(
-    #   fill = alpha("white", 0.8),             # Semi-transparent white background
-    #   color = "black",                        # Border color
-    #   linewidth = 0.5                         # Border thickness
-    # )
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
   ggtitle("gamma = 0.01")
@@ -134,8 +124,8 @@ p_gamma_0.2 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
   ggtitle("gamma = 0.2")
@@ -147,8 +137,8 @@ p_gamma_1 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),   # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),   
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
   ggtitle("gamma = 1")
@@ -160,8 +150,8 @@ p_gamma_5 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),   # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),  
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
   ggtitle("gamma = 5")
@@ -171,13 +161,9 @@ p_gamma_5 <-
 library(gridExtra)
 library(grid)
 
-
 pdf(file="./Plots/gridplot_final.pdf", width=15, height=8)
 grid.arrange(p_gamma_0.01, p_gamma_0.2, p_gamma_1, p_gamma_5, nrow = 2)
 dev.off()
-
-# saveRDS(list(results,omega0), "results_sim_power_mis_mv_final")
-
 
 
 ###############################################################################
@@ -186,7 +172,7 @@ dev.off()
 # Set up sequences for N, gamma, and omega
 seq_N <- seq(50, 150, by=5)
 seq_gamma <- c(.01, .2, 1, 5)
-seq_omega <- c(.1, .3, .5)
+seq_omega <- c(0, .1, .3, .5)
 
 # Initialize nested list structure
 results <- list()
@@ -242,30 +228,6 @@ for(gamma in seq_gamma) {
   }
 }
 
-# simulate once without dropout for all plots
-for(i in seq_along(seq_N)){
-  omega0[i] <- getpower_mis_mv(
-    m = 10000 ,
-    params = list(omega, gamma),
-    attrition = F,
-    N = seq_N[i],
-    t.points = t.points,
-    var.u0 = var.u0,
-    var.u1 = var.u1,
-    cov = cov,
-    var.e = var.e,
-    eff.sizes = eff.sizes,
-    fraction = fraction,
-    log.grow = log.grow,
-    beta1 = beta1,
-    hypothesis = hypothesis,
-    BFthres = BFthres,
-    PMPthres = .9,
-    seed=123
-  )$power_pmp
-  print(i/21)
-}
-
 # store in datasets
 pmp_dat_gamma_0.01_wide <- as.data.frame(results$gamma_0.01)
 pmp_dat_gamma_0.01_wide$N <- seq_N
@@ -300,8 +262,8 @@ pmp_p_gamma_0.01 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(0, .7)) +
   ggtitle("gamma = 0.01")
@@ -313,8 +275,8 @@ pmp_p_gamma_0.2 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(0, .7)) +
   ggtitle("gamma = 0.2")
@@ -326,8 +288,8 @@ pmp_p_gamma_1 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),   # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),   
+    legend.justification = c(1, 0),           
   ) +
   scale_y_continuous(limits = c(0, .7)) +
   ggtitle("gamma = 1")
@@ -339,33 +301,14 @@ pmp_p_gamma_5 <-
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),   # Position inside bottom-right
-    legend.justification = c(1, 0),            # Anchor point
+    legend.position.inside = c(0.95, 0.05),   
+    legend.justification = c(1, 0),          
   ) +
   scale_y_continuous(limits = c(0, .7)) +
   ggtitle("gamma = 5")
 
-# all in one
-
+# make gridplot
 pdf(file="./Plots/gridplot_final_pmp.pdf", width=15, height=8)
 grid.arrange(pmp_p_gamma_0.01, pmp_p_gamma_0.2, pmp_p_gamma_1, pmp_p_gamma_5, nrow = 2)
 dev.off()
-
-#saveRDS(list(results,omega0), "results_sim_power_mis_mv_final_pmp")
-
-res_pmp <- readRDS("results_sim_power_mis_mv_final_pmp")
-
-res_bf <- readRDS("results_sim_power_mis_mv_final")
-
-
-
-
-
-
-
-
-
-
-
-
 
