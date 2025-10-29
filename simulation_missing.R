@@ -1,5 +1,8 @@
-# SIMULATION POWER MISSINGNESS THREE GROUPS using the package
+# SIMULATION POWER MISSINGNESS THREE GROUPS using the package "BayesSSD"
 
+install.packages("devtools")
+library(devtools)
+install_github("ulrichlosener/BayesSSD")
 library(BayeSSD)
 
 # Arguments to function
