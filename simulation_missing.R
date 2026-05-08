@@ -1,9 +1,8 @@
-# SIMULATION POWER MISSINGNESS THREE GROUPS using the package "BayesSSD"
+# SIMULATION POWER ATTRITION WITH THREE CONDITIONS using the package "BayesSSD"
 
-install.packages("devtools")
-library(devtools)
-install_github("ulrichlosener/BayesSSD")
-library(BayeSSD)
+if (!require("pak")) {install.packages("pak")}
+pak::pak("ulrichlosener/BayesSSD")
+library(BayesSSD)
 
 # Arguments to function
 t.points <- c(0,1,2,3,4)
@@ -23,7 +22,7 @@ BFthres <- 5
 # Set up sequences for N, gamma, and omega
 seq_N <- seq(50, 150, by=5)
 seq_gamma <- c(.01, .2, 1, 5)
-seq_omega <- c(0, .1, .3, .5)
+seq_omega <- c(.1, .3, .5)
 
 # Initialize nested list structure
 results <- list()
@@ -57,7 +56,7 @@ for(gamma in seq_gamma) {
       
       # Run single simulation
       results[[gamma_name]][[omega_name]][i] <- get_power(
-        m = 100,
+        m = 10000,
         params = c(omega, gamma),
         attrition = "weibull",
         N = N,
@@ -71,11 +70,36 @@ for(gamma in seq_gamma) {
         log.grow = log.grow,
         hypothesis = hypothesis,
         BFthres = BFthres,
-        seed=123
+        seed = 123
       )$power_bfc
     }
   }
 }
+
+# without attrition
+omega0 <- rep(NA, length(seq_N))
+
+for(i in seq_along(seq_N)){
+  omega0[i] <- get_power(
+    m = 10000,
+    params = c(0, 1),
+    attrition = F,
+    N = seq_N[i],
+    t.points = t.points,
+    var.u0 = var.u0,
+    var.u1 = var.u1,
+    cov = cov,
+    var.e = var.e,
+    eff.sizes = eff.sizes,
+    fraction = fraction,
+    log.grow = log.grow,
+    hypothesis = hypothesis,
+    BFthres = BFthres,
+    seed = 123
+  )$power_bfc
+  print(i/length(seq_N))
+}
+
 
 # Store in long data frames
 library(tidyr)
@@ -83,26 +107,26 @@ library(tidyr)
 dat_gamma_0.01_wide <- as.data.frame(results$gamma_0.01)
 dat_gamma_0.01_wide$N <- seq_N
 dat_gamma_0.01_wide$omega_0 <- omega0
-dat_gamma_0.01_wide <- dat_gamma_0.01_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-dat_gamma_0.01 <- gather(dat_gamma_0.01_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+dat_gamma_0.01 <- gather(dat_gamma_0.01_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_0.01$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
 dat_gamma_0.2_wide <- as.data.frame(results$gamma_0.2)
 dat_gamma_0.2_wide$N <- seq_N
 dat_gamma_0.2_wide$omega_0 <- omega0
-dat_gamma_0.2_wide <- dat_gamma_0.2_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-dat_gamma_0.2 <- gather(dat_gamma_0.2_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+dat_gamma_0.2 <- gather(dat_gamma_0.2_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_0.2$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
 dat_gamma_1_wide <- as.data.frame(results$gamma_1)
 dat_gamma_1_wide$N <- seq_N
 dat_gamma_1_wide$omega_0 <- omega0
-dat_gamma_1_wide <- dat_gamma_1_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-dat_gamma_1 <- gather(dat_gamma_1_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+dat_gamma_1 <- gather(dat_gamma_1_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_1$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
 dat_gamma_5_wide <- as.data.frame(results$gamma_5)
 dat_gamma_5_wide$N <- seq_N
 dat_gamma_5_wide$omega_0 <- omega0
-dat_gamma_5_wide <- dat_gamma_5_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-dat_gamma_5 <- gather(dat_gamma_5_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+dat_gamma_5 <- gather(dat_gamma_5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
 
 # Plots
@@ -113,7 +137,7 @@ p_gamma_0.01 <-
   theme_bw() +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
-    legend.position = "inside",
+    legend.position = "none",
     legend.position.inside = c(0.95, 0.05),    
     legend.justification = c(1, 0),            
   ) +
@@ -126,7 +150,7 @@ p_gamma_0.2 <-
   theme_bw() +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
-    legend.position = "inside",
+    legend.position = "none",
     legend.position.inside = c(0.95, 0.05),    
     legend.justification = c(1, 0),            
   ) +
@@ -139,7 +163,7 @@ p_gamma_1 <-
   theme_bw() +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
-    legend.position = "inside",
+    legend.position = "none",
     legend.position.inside = c(0.95, 0.05),   
     legend.justification = c(1, 0),            
   ) +
@@ -154,17 +178,17 @@ p_gamma_5 <-
   theme(
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.05),  
-    legend.justification = c(1, 0),            
+    legend.justification = c(1, 0),     
+    legend.key.width = unit(2, "cm")   
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
   ggtitle("gamma = 5")
-
 
 # Make gridplot
 library(gridExtra)
 library(grid)
 
-pdf(file="./Plots/gridplot_final.pdf", width=15, height=8)
+pdf(file="./gridplot_final_2.pdf", width=8, height=6)
 grid.arrange(p_gamma_0.01, p_gamma_0.2, p_gamma_1, p_gamma_5, nrow = 2)
 dev.off()
 
@@ -189,8 +213,8 @@ for(gamma in seq_gamma) {
   
   for(omega in seq_omega) {
     omega_name <- paste0("omega_", omega)
-    results[[gamma_name]][[omega_name]] <- numeric(length(seq_N))
-    names(results[[gamma_name]][[omega_name]]) <- paste0("N_", seq_N)
+    pmp_results[[gamma_name]][[omega_name]] <- numeric(length(seq_N))
+    names(pmp_results[[gamma_name]][[omega_name]]) <- paste0("N_", seq_N)
     
     for(i in seq_along(seq_N)) {
       N <- seq_N[i]
@@ -208,7 +232,7 @@ for(gamma in seq_gamma) {
       flush.console()
       
       # Run single simulation
-      results[[gamma_name]][[omega_name]][i] <- getpower_mis_mv(
+      pmp_results[[gamma_name]][[omega_name]][i] <- getpower_mis_mv(
         m = 10000 ,
         params = list(omega, gamma),
         attrition = "gompertz",
@@ -231,70 +255,73 @@ for(gamma in seq_gamma) {
   }
 }
 
+pmp_omega0 <- r[[1]]
+pmp_results <- r[[2]]
 # store in datasets
-pmp_dat_gamma_0.01_wide <- as.data.frame(results$gamma_0.01)
+
+pmp_dat_gamma_min5_wide <- as.data.frame(pmp_results$`gamma_-5`)
+pmp_dat_gamma_min5_wide$N <- seq_N
+pmp_dat_gamma_min5_wide$omega_0 <- pmp_omega0
+pmp_dat_gamma_min5 <- gather(pmp_dat_gamma_min5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_min5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
+
+pmp_dat_gamma_min2_wide <- as.data.frame(pmp_results$`gamma_-2`)
+pmp_dat_gamma_min2_wide$N <- seq_N
+pmp_dat_gamma_min2_wide$omega_0 <- pmp_omega0
+pmp_dat_gamma_min2 <- gather(pmp_dat_gamma_min2_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_min2$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
+
+pmp_dat_gamma_0.01_wide <- as.data.frame(pmp_results$gamma_0.01)
 pmp_dat_gamma_0.01_wide$N <- seq_N
-pmp_dat_gamma_0.01_wide$omega_0 <- omega0
-pmp_dat_gamma_0.01_wide <- pmp_dat_gamma_0.01_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-pmp_dat_gamma_0.01 <- gather(pmp_dat_gamma_0.01_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+pmp_dat_gamma_0.01_wide$omega_0 <- pmp_omega0
+pmp_dat_gamma_0.01 <- gather(pmp_dat_gamma_0.01_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_0.01$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
-pmp_dat_gamma_0.2_wide <- as.data.frame(results$gamma_0.2)
-pmp_dat_gamma_0.2_wide$N <- seq_N
-pmp_dat_gamma_0.2_wide$omega_0 <- omega0
-pmp_dat_gamma_0.2_wide <- pmp_dat_gamma_0.2_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-pmp_dat_gamma_0.2 <- gather(pmp_dat_gamma_0.2_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
-
-pmp_dat_gamma_1_wide <- as.data.frame(results$gamma_1)
-pmp_dat_gamma_1_wide$N <- seq_N
-pmp_dat_gamma_1_wide$omega_0 <- omega0
-pmp_dat_gamma_1_wide <- pmp_dat_gamma_1_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-pmp_dat_gamma_1 <- gather(pmp_dat_gamma_1_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
-
-pmp_dat_gamma_5_wide <- as.data.frame(results$gamma_5)
+pmp_dat_gamma_5_wide <- as.data.frame(pmp_results$gamma_5)
 pmp_dat_gamma_5_wide$N <- seq_N
-pmp_dat_gamma_5_wide$omega_0 <- omega0
-pmp_dat_gamma_5_wide <- pmp_dat_gamma_5_wide[, c("omega_0", "omega_0.1", "omega_0.3", "omega_0.5", "N")]
-pmp_dat_gamma_5 <- gather(pmp_dat_gamma_5_wide, omega, power, omega_0:omega_0.5, factor_key=TRUE)
+pmp_dat_gamma_5_wide$omega_0 <- pmp_omega0
+pmp_dat_gamma_5 <- gather(pmp_dat_gamma_5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
 
 # make plots
+pmp_p_gamma_min5 <- 
+  ggplot(data = pmp_dat_gamma_min5, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
+  geom_line(linewidth = 1.2) +
+  theme_bw() +
+  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
+  theme(
+    legend.position = "none",
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
+  ) +
+  scale_y_continuous(limits = c(0.8, 1)) +
+  ggtitle("gamma = 0.01")
+
+pmp_p_gamma_min2 <- 
+  ggplot(data = pmp_dat_gamma_min2, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
+  geom_line(linewidth = 1.2) +
+  theme_bw() +
+  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
+  theme(
+    legend.position = "none",
+    legend.position.inside = c(0.95, 0.05),    
+    legend.justification = c(1, 0),            
+  ) +
+  scale_y_continuous(limits = c(0.8, 1)) +
+  ggtitle("gamma = 0.2")
+
 pmp_p_gamma_0.01 <- 
   ggplot(data = pmp_dat_gamma_0.01, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
   theme_bw() +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
-    legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    
-    legend.justification = c(1, 0),            
-  ) +
-  scale_y_continuous(limits = c(0, .7)) +
-  ggtitle("gamma = 0.01")
-
-pmp_p_gamma_0.2 <- 
-  ggplot(data = pmp_dat_gamma_0.2, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
-  geom_line(linewidth = 1.2) +
-  theme_bw() +
-  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
-  theme(
-    legend.position = "inside",
-    legend.position.inside = c(0.95, 0.05),    
-    legend.justification = c(1, 0),            
-  ) +
-  scale_y_continuous(limits = c(0, .7)) +
-  ggtitle("gamma = 0.2")
-
-pmp_p_gamma_1 <- 
-  ggplot(data = pmp_dat_gamma_1, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
-  geom_line(linewidth = 1.2) +
-  theme_bw() +
-  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
-  theme(
-    legend.position = "inside",
+    legend.position = "none",
     legend.position.inside = c(0.95, 0.05),   
     legend.justification = c(1, 0),           
   ) +
-  scale_y_continuous(limits = c(0, .7)) +
+  scale_y_continuous(limits = c(0.8, 1)) +
   ggtitle("gamma = 1")
 
 pmp_p_gamma_5 <- 
@@ -305,13 +332,14 @@ pmp_p_gamma_5 <-
   theme(
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.05),   
-    legend.justification = c(1, 0),          
+    legend.justification = c(1, 0),   
+    legend.key.width = unit(2, "cm")   
   ) +
-  scale_y_continuous(limits = c(0, .7)) +
+  scale_y_continuous(limits = c(0.8, 1)) +
   ggtitle("gamma = 5")
 
 # make gridplot
-pdf(file="./Plots/gridplot_final_pmp.pdf", width=15, height=8)
-grid.arrange(pmp_p_gamma_0.01, pmp_p_gamma_0.2, pmp_p_gamma_1, pmp_p_gamma_5, nrow = 2)
+pdf(file="./gridplot_final_PMPs_2.pdf", width=8, height=5)
+grid.arrange(pmp_p_gamma_min5, pmp_p_gamma_min2, pmp_p_gamma_0.01, pmp_p_gamma_5, nrow = 2)
 dev.off()
 
