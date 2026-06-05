@@ -1,3 +1,7 @@
+################################################################################
+## SHINY APP for visualizing MLM parameters - ui ###############################
+################################################################################
+
 library(shiny)
 library(ggplot2)
 library(shinyWidgets)
@@ -45,11 +49,11 @@ fluidPage(
                    ),
                    br(),
                    
-                   box(title = "Effect size(s)", width = NULL, solidHeader = FALSE, status = "primary",
+                   box(title = "Effect sizes", width = NULL, solidHeader = FALSE, status = "primary",
                      
                        withMathJax(
                          span(HTML(
-                           "<b>Effect sizes of respective treatment interventions are defined as the standardized slope difference relative to the control condition. <br> The effect size of condition k is defined as \\(\\delta_k = \\beta_k \\sqrt{\\sigma^2_{u1}}\\), where \\(\\beta_k\\) is the regression coefficient of interaction between time and condition k, and \\( \\sigma^2_{u1} \\) the slope variance. An estimate may follow from the literature, expert opinion or expectations. <br> <br> As a rule of thumb, an effect size of 0.2/0.5/0.8 can be considered a small/medium/large effect. </b>"
+                           "<b>Effect sizes of treatment conditions are defined as the mean standardized slope in that condition. <br> The effect size of condition k is defined as \\(\\delta_k = \\beta_k \\sqrt{\\sigma^2_{u1}}\\), where \\(\\beta_k\\) is the regression coefficient of interaction between time and condition k, and \\( \\sigma^2_{u1} \\) the slope variance. An estimate may follow from the literature, expert opinions, expectations, or a minimal clinically important difference. <br> <br> As a rule of thumb, an effect size of 0.2/0.5/0.8 can be considered a small/medium/large effect. </b>"
                          ))
                        ),
                      br(), br(),
@@ -72,15 +76,15 @@ fluidPage(
                        "<b>Give a priori estimate of the overall intercept</b>"),
                        div(style = "display:inline-block;",
                            title = "User-specified a priori estimate of the initial mean score in all conditions (beta_0).",
-                           icon("info-circle")))
+                           ))
                      ,
                      numericInput("int", "", value=0,label=NULL,step=.1),
                      # main effect time (beta 1)
                      span(HTML(
                        "<b>Give a priori estimate of the main effect of time</b>"),
                        div(style = "display:inline-block;",
-                           title = "User-specified a priori estimate of the main effect of time (beta_1). If positive (negative), scores in all conditions will increase (decrease) over time.",
-                           icon("info-circle")))
+                           title = "User-specified a priori estimate of the main effect of time in the reference (control) condition (beta_1). If positive (negative), scores in the reference (control) condition will increase (decrease) over time.",
+                           ))
                      ,
                      numericInput("beta1", "", value=0,label=NULL,step=.1),
                    ),
@@ -92,7 +96,7 @@ fluidPage(
                        "<b>Give a priori estimate of residual variance</b>"),
                        div(style = "display:inline-block;",
                            title = "User-specified a priori estimate for the variability in residual scores. An estimate may follow from the literature, expert opinion or expectations.",
-                           icon("info-circle")))
+                           ))
                      ,
                      numericInput("var.e", "", value=.1,label=NULL,step=.1),
                      
@@ -100,7 +104,7 @@ fluidPage(
                        "<b>Give a priori estimate of variance in baseline scores</b>"),
                        div(style = "display:inline-block;",
                            title = "User-specified a priori estimate for the variability in scores at time point zero. An estimate may follow from the literature, expert opinion or expectations.",
-                           icon("info-circle")))
+                           ))
                      ,
                      numericInput("var.u0", "", value=.1,label=NULL,step=.1),
                      
@@ -109,7 +113,7 @@ fluidPage(
                        "<b>Give a priori estimate of variance in growth rate</b>"),
                        div(style = "display:inline-block;",
                            title = "User-specified a priori estimate for the variability in growth rates. An estimate may follow from the literature, expert opinion or expectations. Note that this value affects the magnitude of the interaction between time and condition.",
-                           icon("info-circle")))
+                           ))
                      ,
                      numericInput("var.u1", "", value=.1,label=NULL,step=.1),
                      
@@ -117,7 +121,7 @@ fluidPage(
                        "<b>Give a priori estimate of covariance between baseline scores and growth rate</b>"),
                        div(style = "display:inline-block;",
                            title = "User-specified a priori estimate for the association between scores at time point zero and growth rate. An estimate may follow from the literature, expert opinion or expectations.",
-                           icon("info-circle")))
+                           ))
                      ,
                      numericInput("covar.u01", "", value=.01,label=NULL,step=.1)
                    ),
@@ -125,15 +129,22 @@ fluidPage(
             # column 3: plot
             column(
               width = 6,
-              box(
-                title = "Mean response curves and 95% prediction bands",
-                width = NULL,
-                solidHeader = FALSE,
-                status = "primary",
-                plotOutput(
-                  "responsecurves",
-                  height = "600px"  # default ~400px
+              uiOutput("response_box"),
+              br(),
+              fluidRow(
+              # Prediction width
+                column(
+                  width = 6,
+                  span(HTML("<b>Percentile of prediction band</b>")),
+                  numericInput("pred_width", "", value = .75,
+                               min = .1, max = .99, step = .01)
+                ),
+                # Dynamic checkbox group
+                column(
+                  width = 6,
+                  uiOutput("condition_selector")
                 )
+                
               )
             )
           )
