@@ -193,7 +193,7 @@ beta_cond_d <- mlm@beta[5]
 (delta_cond_d <- beta_cond_d / sqrt(var_slope))
 ```
 
-We can see that the effect sizes for treatments a), b), c), and d) are equal to $\delta_a=0.29$, $\delta_b=0.11$, $\delta_c=-0.13$, and $\delta_d=-.40$, respectively. Positive (negative) effect sizes indicate an increase (decline) of perceived severity over time. For an illustrative overview of the influence of the multilevel model parameters on the growth curves, please visit the [ShinyApp](https://losener.shinyapps.io/MLM_input2/) developed for this purpose.
+We can see that the effect sizes for treatments a), b), c), and d) are equal to $\delta_a=0.35$, $\delta_b=0.26$, $\delta_c=-0.24$, and $\delta_d=-0.51$, respectively. Positive (negative) effect sizes indicate an increase (decline) of perceived severity over time. Thus, in condition a) and b), the perceived severity increases over time, while it decreases in conditions c) and d). For an illustrative overview of the influence of the multilevel model parameters on the growth curves, please visit the [ShinyApp](https://losener.shinyapps.io/MLM_input2/) developed for this purpose.
 
 # Time points and attrition
 
@@ -235,7 +235,7 @@ For an extensive overview of the available survival functions that can be used f
 
 Now that we obtained all the estimates necessary to perform the Bayesian Sample Size Determination, we need to install the package `BayesSSD` from [GitHub](https://github.com/ulrichlosener/BayesSSD) using the `pak` package.
 
-```{r BayesSSD Package, message=F, warning=F, results=F}
+```{r BayesSSD Package, eval=F}
 if (!require("pak")) {install.packages("pak")}
 
 pak::pak("ulrichlosener/BayesSSD")
@@ -282,13 +282,12 @@ ssd_result <- SSD_longit(
                method      = "bfc",
                sensitivity = F,
                seed        = 123,
-               group.sizes = NULL,
                N.min       = 50,
                N.max       = 1500
 )
 ```
 
-The output informs us that the minimal sample size needed to achieve a power of $\eta=.80$ when testing $\mathscr{H}_1$ against its complement $\mathscr{H}_c$ is $\mathbf{N_{total}=1062}$, while taking the anticipated attrition pattern into account. So, for our fictitious replication study, we would need to sample 62 more participants than in the original study. 
+The output informs us that the minimal sample size needed to achieve a power of at least $\eta=.80$ when testing $\mathscr{H}_1$ against its complement $\mathscr{H}_c$ is $\mathbf{N_{total}=684}$, while taking the anticipated attrition pattern into account. 
 
 For more information on the SSD procedure, we can inspect the object that the function was assigned to.
 
@@ -296,7 +295,7 @@ For more information on the SSD procedure, we can inspect the object that the fu
 ssd_result
 ```
 
-This tells us the sample sizes that were evaluated during the binary search (800, 1150, 975, 1062) along with their resulting power, the proportion of models that had to be simplified due to high attrition (0%), the number of iterations (5) and the runtime of the SSD procedure in minutes (35). While this information is not essential for the result of the SSD, it can be useful for gaining more insight into the SSD algorithm.
+This tells us the sample sizes that were evaluated during the binary search (775, 412, 593, 684) along with their resulting power, the proportion of models that had to be simplified due to high attrition (0%), the number of iterations (4) and the runtime of the SSD procedure in minutes (19). While this information is not essential for the result of the SSD, it can be useful for gaining more insight into the SSD algorithm.
 
 ***
 
