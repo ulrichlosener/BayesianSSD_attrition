@@ -1,8 +1,17 @@
-# SIMULATION POWER ATTRITION WITH THREE CONDITIONS using the package "BayesSSD"
+################################################################################
+# Code for simulation power and attrition with three conditions using the ######
+# 'BayesSSD' package ###########################################################
+################################################################################
 
+# install BayesSSD package
 if (!require("pak")) {install.packages("pak")}
 pak::pak("ulrichlosener/BayesSSD")
 library(BayesSSD)
+
+# packages needed for plotting
+library(ggplot2)
+library(gridExtra)
+library(grid)
 
 # Arguments to function
 t.points <- c(0,1,2,3,4)
@@ -100,41 +109,61 @@ for(i in seq_along(seq_N)){
   print(i/length(seq_N))
 }
 
+# Read saved simdata
+dat1 <- readRDS("simresults_bfc.RDS")
+omega0 <- dat1[[1]]
 
-# Store in long data frames
-library(tidyr)
-
-dat_gamma_0.01_wide <- as.data.frame(results$gamma_0.01)
+dat_gamma_0.01_wide <- as.data.frame(dat1[[2]])[,1:3]
 dat_gamma_0.01_wide$N <- seq_N
 dat_gamma_0.01_wide$omega_0 <- omega0
-dat_gamma_0.01 <- gather(dat_gamma_0.01_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_0.01 <- gather(dat_gamma_0.01_wide, omega, power, c(omega_0, gamma_0.01.omega_0.1, gamma_0.01.omega_0.3, gamma_0.01.omega_0.5), factor_key=TRUE)
 dat_gamma_0.01$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
-dat_gamma_0.2_wide <- as.data.frame(results$gamma_0.2)
+dat_gamma_0.2_wide <- as.data.frame(dat1[[2]])[,4:6]
 dat_gamma_0.2_wide$N <- seq_N
 dat_gamma_0.2_wide$omega_0 <- omega0
-dat_gamma_0.2 <- gather(dat_gamma_0.2_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_0.2 <- gather(dat_gamma_0.2_wide, omega, power, c(omega_0, gamma_0.2.omega_0.1, gamma_0.2.omega_0.3, gamma_0.2.omega_0.5), factor_key=TRUE)
 dat_gamma_0.2$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
-dat_gamma_1_wide <- as.data.frame(results$gamma_1)
+dat_gamma_1_wide <- as.data.frame(dat1[[2]])[,7:9]
 dat_gamma_1_wide$N <- seq_N
 dat_gamma_1_wide$omega_0 <- omega0
-dat_gamma_1 <- gather(dat_gamma_1_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
+dat_gamma_1 <- gather(dat_gamma_1_wide, omega, power, c(omega_0, gamma_1.omega_0.1, gamma_1.omega_0.3, gamma_1.omega_0.5), factor_key=TRUE)
 dat_gamma_1$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
 
-dat_gamma_5_wide <- as.data.frame(results$gamma_5)
+dat_gamma_5_wide <- as.data.frame(dat1[[2]])[,10:12]
 dat_gamma_5_wide$N <- seq_N
 dat_gamma_5_wide$omega_0 <- omega0
-dat_gamma_5 <- gather(dat_gamma_5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
-dat_gamma_5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
-
+dat_gamma_5 <- gather(dat_gamma_5_wide, omega, power, c(omega_0, gamma_5.omega_0.1, gamma_5.omega_0.3, gamma_5.omega_0.5), factor_key=TRUE)
+dat_gamma_5$omega <- rep(c("omega = 0", "omega = 0.1", "omega = 0.3", "omega = 0.5"), each=length(seq_N))
 
 # Plots
-library(ggplot2)
+# set theme according to AMPPS guidelines
+ampps_theme <- theme_bw(
+  base_family = "Arial",
+  base_size = 9
+) +
+  theme(
+    text = element_text(family = "Arial"),
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    plot.title = element_text(
+      size = 12,
+      hjust = 0.5
+    ),
+    legend.text = element_text(size = 9),
+    legend.title = element_blank(),
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.box.background = element_blank(),
+    axis.text.y = element_text(angle = 0)
+  )
+
+# make plots
 p_gamma_0.01 <- 
   ggplot(data = dat_gamma_0.01, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -142,12 +171,12 @@ p_gamma_0.01 <-
     legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
-  ggtitle("gamma = 0.01")
+  ggtitle(expression(gamma == 0.01))
 
 p_gamma_0.2 <- 
   ggplot(data = dat_gamma_0.2, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -155,12 +184,12 @@ p_gamma_0.2 <-
     legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
-  ggtitle("gamma = 0.2")
+  ggtitle(expression(gamma == 0.2))
 
 p_gamma_1 <- 
   ggplot(data = dat_gamma_1, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -168,13 +197,29 @@ p_gamma_1 <-
     legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
-  ggtitle("gamma = 1")
+  ggtitle(expression(gamma == 1))
 
 p_gamma_5 <- 
   ggplot(data = dat_gamma_5, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
-  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
+  ampps_theme +
+  scale_linetype_manual(
+    values = c("solid", "longdash", "dotdash", "dotted"),
+    labels = c(
+      expression(omega == 0),
+      expression(omega == 0.1),
+      expression(omega == 0.3),
+      expression(omega == 0.5)
+    )
+  ) +
+  scale_color_discrete(
+    labels = c(
+      expression(omega == 0),
+      expression(omega == 0.1),
+      expression(omega == 0.3),
+      expression(omega == 0.5)
+    )
+  ) +
   theme(
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.05),  
@@ -182,15 +227,25 @@ p_gamma_5 <-
     legend.key.width = unit(2, "cm")   
   ) +
   scale_y_continuous(limits = c(.45, .95)) +
-  ggtitle("gamma = 5")
+  ggtitle(expression(gamma == 5))
 
-# Make gridplot
-library(gridExtra)
-library(grid)
+# save plot according to AMPPS guidelines
+cairo_pdf(
+  file = "./LosenerFig2.pdf",
+  width = 8,
+  height = 6
+)
 
-pdf(file="./gridplot_final_2.pdf", width=8, height=6)
-grid.arrange(p_gamma_0.01, p_gamma_0.2, p_gamma_1, p_gamma_5, nrow = 2)
+grid.arrange(
+  p_gamma_0.01,
+  p_gamma_0.2,
+  p_gamma_1,
+  p_gamma_5,
+  nrow = 2
+)
+
 dev.off()
+
 
 
 ###############################################################################
@@ -198,18 +253,18 @@ dev.off()
 
 # Set up sequences for N, gamma, and omega
 seq_N <- seq(50, 150, by=5)
-seq_gamma <- c(.01, .2, 1, 5)
+seq_gamma <- c(-5, -2, .01, 5)
 seq_omega <- c(0, .1, .3, .5)
 
 # Initialize nested list structure
-results <- list()
+pmp_results <- list()
 total_combos <- length(seq_gamma) * length(seq_omega) * length(seq_N)
 counter <- 0
 start_time <- Sys.time()
 
 for(gamma in seq_gamma) {
   gamma_name <- paste0("gamma_", gamma)
-  results[[gamma_name]] <- list()
+  pmp_results[[gamma_name]] <- list()
   
   for(omega in seq_omega) {
     omega_name <- paste0("omega_", omega)
@@ -232,9 +287,9 @@ for(gamma in seq_gamma) {
       flush.console()
       
       # Run single simulation
-      pmp_results[[gamma_name]][[omega_name]][i] <- getpower_mis_mv(
+      pmp_results[[gamma_name]][[omega_name]][i] <- get_power(
         m = 10000 ,
-        params = list(omega, gamma),
+        params = c(omega, gamma),
         attrition = "gompertz",
         N = N,
         t.points = t.points,
@@ -245,7 +300,6 @@ for(gamma in seq_gamma) {
         eff.sizes = eff.sizes,
         fraction = fraction,
         log.grow = log.grow,
-        beta1 = beta1,
         hypothesis = hypothesis,
         BFthres = BFthres,
         PMPthres = .9,
@@ -255,40 +309,39 @@ for(gamma in seq_gamma) {
   }
 }
 
-pmp_omega0 <- r[[1]]
-pmp_results <- r[[2]]
-# store in datasets
+# Read saved simdata
+dat2 <- readRDS("simresults_pmp.RDS")
+omega0 <- dat2[[1]]
 
-pmp_dat_gamma_min5_wide <- as.data.frame(pmp_results$`gamma_-5`)
+pmp_dat_gamma_min5_wide <- as.data.frame(dat2[[2]])[,1:3]
 pmp_dat_gamma_min5_wide$N <- seq_N
-pmp_dat_gamma_min5_wide$omega_0 <- pmp_omega0
-pmp_dat_gamma_min5 <- gather(pmp_dat_gamma_min5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
-pmp_dat_gamma_min5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
+pmp_dat_gamma_min5_wide$omega_0 <- omega0
+pmp_dat_gamma_min5 <- gather(pmp_dat_gamma_min5_wide, omega, power, c(omega_0, gamma_.5.omega_0.1, gamma_.5.omega_0.3, gamma_.5.omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_min5$omega <- rep(c("omega = 0", "omega = 0.1", "omega = 0.3", "omega = 0.5"), each=length(seq_N))
 
-pmp_dat_gamma_min2_wide <- as.data.frame(pmp_results$`gamma_-2`)
+pmp_dat_gamma_min2_wide <- as.data.frame(dat2[[2]])[,4:6]
 pmp_dat_gamma_min2_wide$N <- seq_N
-pmp_dat_gamma_min2_wide$omega_0 <- pmp_omega0
-pmp_dat_gamma_min2 <- gather(pmp_dat_gamma_min2_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
-pmp_dat_gamma_min2$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
+pmp_dat_gamma_min2_wide$omega_0 <- omega0
+pmp_dat_gamma_min2 <- gather(pmp_dat_gamma_min2_wide, omega, power, c(omega_0, gamma_.2.omega_0.1, gamma_.2.omega_0.3, gamma_.2.omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_min2$omega <- rep(c("omega = 0", "omega = 0.1", "omega = 0.3", "omega = 0.5"), each=length(seq_N))
 
-pmp_dat_gamma_0.01_wide <- as.data.frame(pmp_results$gamma_0.01)
+pmp_dat_gamma_0.01_wide <- as.data.frame(dat2[[2]])[,7:9]
 pmp_dat_gamma_0.01_wide$N <- seq_N
-pmp_dat_gamma_0.01_wide$omega_0 <- pmp_omega0
-pmp_dat_gamma_0.01 <- gather(pmp_dat_gamma_0.01_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
-pmp_dat_gamma_0.01$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
+pmp_dat_gamma_0.01_wide$omega_0 <- omega0
+pmp_dat_gamma_0.01 <- gather(pmp_dat_gamma_0.01_wide, omega, power, c(omega_0, gamma_0.01.omega_0.1, gamma_0.01.omega_0.3, gamma_0.01.omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_0.01$omega <- rep(c("omega = 0", "omega = 0.1", "omega = 0.3", "omega = 0.5"), each=length(seq_N))
 
-pmp_dat_gamma_5_wide <- as.data.frame(pmp_results$gamma_5)
+pmp_dat_gamma_5_wide <- as.data.frame(dat2[[2]])[,10:12]
 pmp_dat_gamma_5_wide$N <- seq_N
-pmp_dat_gamma_5_wide$omega_0 <- pmp_omega0
-pmp_dat_gamma_5 <- gather(pmp_dat_gamma_5_wide, omega, power, c(omega_0, omega_0.1, omega_0.3, omega_0.5), factor_key=TRUE)
-pmp_dat_gamma_5$omega <- rep(c("omega=0", "omega=0.1", "omega=0.3", "omega=0.5"), each=length(seq_N))
-
+pmp_dat_gamma_5_wide$omega_0 <- omega0
+pmp_dat_gamma_5 <- gather(pmp_dat_gamma_5_wide, omega, power, c(omega_0, gamma_5.omega_0.1, gamma_5.omega_0.3, gamma_5.omega_0.5), factor_key=TRUE)
+pmp_dat_gamma_5$omega <- rep(c("omega = 0", "omega = 0.1", "omega = 0.3", "omega = 0.5"), each=length(seq_N))
 
 # make plots
 pmp_p_gamma_min5 <- 
   ggplot(data = pmp_dat_gamma_min5, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -296,12 +349,12 @@ pmp_p_gamma_min5 <-
     legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(0.8, 1)) +
-  ggtitle("gamma = 0.01")
+  ggtitle(expression(gamma == -5))
 
 pmp_p_gamma_min2 <- 
   ggplot(data = pmp_dat_gamma_min2, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -309,12 +362,12 @@ pmp_p_gamma_min2 <-
     legend.justification = c(1, 0),            
   ) +
   scale_y_continuous(limits = c(0.8, 1)) +
-  ggtitle("gamma = 0.2")
+  ggtitle(expression(gamma == -2))
 
 pmp_p_gamma_0.01 <- 
   ggplot(data = pmp_dat_gamma_0.01, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
+  ampps_theme +
   scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
   theme(
     legend.position = "none",
@@ -322,13 +375,29 @@ pmp_p_gamma_0.01 <-
     legend.justification = c(1, 0),           
   ) +
   scale_y_continuous(limits = c(0.8, 1)) +
-  ggtitle("gamma = 1")
+  ggtitle(expression(gamma == 0.01))
 
 pmp_p_gamma_5 <- 
   ggplot(data = pmp_dat_gamma_5, mapping = aes(x = N, y = power, color = omega, linetype = omega)) +
   geom_line(linewidth = 1.2) +
-  theme_bw() +
-  scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
+  ampps_theme +
+  scale_linetype_manual(
+    values = c("solid", "longdash", "dotdash", "dotted"),
+    labels = c(
+      expression(omega == 0),
+      expression(omega == 0.1),
+      expression(omega == 0.3),
+      expression(omega == 0.5)
+    )
+  ) +
+  scale_color_discrete(
+    labels = c(
+      expression(omega == 0),
+      expression(omega == 0.1),
+      expression(omega == 0.3),
+      expression(omega == 0.5)
+    )
+  ) +
   theme(
     legend.position = "inside",
     legend.position.inside = c(0.95, 0.05),   
@@ -336,10 +405,22 @@ pmp_p_gamma_5 <-
     legend.key.width = unit(2, "cm")   
   ) +
   scale_y_continuous(limits = c(0.8, 1)) +
-  ggtitle("gamma = 5")
+  ggtitle(expression(gamma == 5))
 
-# make gridplot
-pdf(file="./gridplot_final_PMPs_2.pdf", width=8, height=5)
-grid.arrange(pmp_p_gamma_min5, pmp_p_gamma_min2, pmp_p_gamma_0.01, pmp_p_gamma_5, nrow = 2)
+# save plot according to AMPPS guidelines
+cairo_pdf(
+  file = "./LosenerFig3.pdf",
+  width = 8,
+  height = 6
+)
+
+grid.arrange(
+  pmp_p_gamma_min5,
+  pmp_p_gamma_min2,
+  pmp_p_gamma_0.01,
+  pmp_p_gamma_5,
+  nrow = 2
+)
+
 dev.off()
 

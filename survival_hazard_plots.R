@@ -1,7 +1,11 @@
+################################################################################
+# Code to reproduce Figure 1 and 4 of the Paper "Bayesian Sample Size 
+# Determination for Longitudinal Trials with Attrition – the BayesSSD Package" #
+# published in AAMPS 2026 ######################################################
+################################################################################
+
 library(ggplot2)
 library(gridExtra)
-
-#################### Figure 1 & Figure 4 #######################################
 
 # create x variable (time)
 time <- seq(0, 1, length.out = 1000)
@@ -169,203 +173,423 @@ df_gomp_haz <- data.frame(
 
 ######################## Make survival plots ###################################
 
-p_weib <- ggplot(df_weib, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-            geom_line(linewidth = 1.25) +
-            labs(title = "Weibull Survival Function",
-                 x = "Time (proportion)", y = "Survival Probability",
-                 color=expression(gamma), linetype=expression(gamma)) +
-            ylim(c(0,1)) +
-            theme_minimal() +
-            theme(legend.position = c(0.5, 0.15),
-                  legend.background = element_rect(fill = "white", color = "black"),
-                  legend.direction="horizontal",
-                  legend.title = element_text(size=20),
-                  legend.key.size = unit(1.4,"line"),
-                  title = element_text(face="bold"),
-                  axis.title = element_text(face="plain")) 
+p_weib <- ggplot(df_weib, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Weibull Survival Function",
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1),
+               expression(gamma == 3))) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1),
+                                   expression(gamma == 3))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+    legend.background = element_blank(),
+    legend.key = element_blank(),
+    legend.key.width = unit(1, "cm"),
+    legend.box.background = element_blank(),
+    axis.title = element_text(size = 10),
+    axis.text = element_text(size = 9),
+    axis.text.y = element_text(angle = 0),
+    plot.title = element_text(
+      size = 12,
+      face = "plain",
+      hjust = 0.5
+    ),
+    panel.grid.minor = element_blank()
+  )
 
-p_mod_weib <- ggplot(df_mod_weib, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                geom_line(linewidth = 1.25) +
-                labs(title = "Modified Weibull Survival Function",
-                     subtitle = expression(kappa*" = 2"),
-                     x = "Time (proportion)", y = "Survival Probability",
-                     color=expression(gamma), linetype=expression(gamma)) +
-                ylim(c(0,1)) +
-                theme_minimal() +
-                theme(legend.position = c(0.5, 0.15),
-                      legend.direction="horizontal",
-                      legend.title = element_text(size=20),
-                      legend.background = element_rect(fill = "white", color = "black"),
-                      legend.key.size = unit(1.4,"line"),
-                      title = element_text(face="bold"),
-                      plot.subtitle = element_text(size=15),
-                      axis.title = element_text(face="plain"))
+p_mod_weib <- ggplot(df_mod_weib, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = expression("Modified Weibull Survival Function with " * kappa == 2),
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1.5),
+                                   expression(gamma == 2))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1.5),
+               expression(gamma == 2))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
               
-p_mod_weib2 <- ggplot(df_mod_weib2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                  geom_line(linewidth = 1.25) +
-                  labs(title = "Modified Weibull Survival Function",
-                       subtitle = expression(kappa*" = 0.1"),
-                       x = "Time (proportion)", y = "Survival Probability",
-                       color=expression(gamma), linetype=expression(gamma)) +
-                  ylim(c(0,1)) +
-                  theme_minimal() +
-                  theme(legend.position = c(0.5, 0.15),
-                        legend.direction="horizontal",
-                        legend.title = element_text(size=20),
-                        legend.background = element_rect(fill = "white", color = "black"),
-                        legend.key.size = unit(1.4,"line"),
-                        title = element_text(face="bold"),
-                        plot.subtitle = element_text(size=15),
-                        axis.title = element_text(face="plain"))
+p_mod_weib2 <- ggplot(df_mod_weib2, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = expression("Modified Weibull Survival Function with " * kappa == 0.1),
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1.5),
+                                   expression(gamma == 2))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1.5),
+               expression(gamma == 2))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_log <- ggplot(df_log, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-          geom_line(linewidth = 1.25) +
-          labs(title = "Log-Logistic Survival Function",
-               x = "Time (proportion)", y = "Survival Probability",
-               color=expression(gamma), linetype=expression(gamma)) +
-          ylim(c(0,1)) +
-          theme_minimal() +
-          theme(legend.position = c(0.5, 0.15),
-                legend.background = element_rect(fill = "white", color = "black"),
-                legend.direction="horizontal",
-                legend.title = element_text(size=20),
-                legend.key.size = unit(1.4,"line"),
-                title = element_text(face="bold"),
-                axis.title = element_text(face="plain")) 
+p_log <- ggplot(df_log, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Log-Logistic Survival Function",
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.7),
+                                   expression(gamma == 1),
+                                   expression(gamma == 2))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.7),
+               expression(gamma == 1),
+               expression(gamma == 2))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
         
-p_lin_exp <- ggplot(df_lin_exp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-              geom_line(linewidth = 1.25) +
-              labs(title = "Linear-Exponential Survival Function",
-                   x = "Time (proportion)", y = "Survival Probability",
-                   color=expression(gamma), linetype=expression(gamma)) +
-              ylim(c(0,1)) +
-              theme_minimal() +
-              theme(legend.position = c(0.5, 0.15),
-                    legend.background = element_rect(fill = "white", color = "black"),
-                    legend.direction="horizontal",
-                    legend.title = element_text(size=20),
-                    legend.key.size = unit(1.4,"line"),
-                    title = element_text(face="bold"),
-                    axis.title = element_text(face="plain")) 
+p_lin_exp <- ggplot(df_lin_exp, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Linear-Exponential Survival Function",
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == -0.9),
+                                   expression(gamma == 0),
+                                   expression(gamma == 0.9))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == -0.9),
+               expression(gamma == 0),
+               expression(gamma == 0.9))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
             
-p_gomp <- ggplot(df_gomp, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-            geom_line(linewidth = 1.25) +
-            labs(title = "Gompertz Survival Function",
-                 x = "Time (proportion)", y = "Survival Probability",
-                 color=expression(gamma), linetype=expression(gamma)) +
-            ylim(c(0,1)) +
-            theme_minimal() +
-            theme(legend.position = c(0.5, 0.15),
-                  legend.background = element_rect(fill = "white", color = "black"),
-                  legend.direction="horizontal",
-                  legend.title = element_text(size=20),
-                  legend.key.size = unit(1.4,"line"),
-                  title = element_text(face="bold"),
-                  axis.title = element_text(face="plain")) 
+p_gomp <- ggplot(df_gomp, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Gompertz Survival Function",
+       x = "Time (Proportion)", y = "Survival Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == -5),
+                                   expression(gamma == 0.5),
+                                   expression(gamma == 5))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == -5),
+               expression(gamma == 0.5),
+               expression(gamma == 5))) +
+  coord_cartesian(ylim = c(0, 1)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
+# save plot as pdf
+cairo_pdf(
+  "./LosenerFig4.pdf",
+  width = 8,
+  height = 6
+)
 
-pdf("survival_grid2.pdf", width = 8, height=12)
-  grid.arrange(p_weib, p_mod_weib, p_mod_weib2, p_log, p_lin_exp, p_gomp, nrow=3)
+grid.arrange(p_weib, p_mod_weib, p_mod_weib2, p_log, p_lin_exp, p_gomp, nrow=3)
+
 dev.off()
 
 
 ######################## Make hazard plots #####################################
 
-p_weib_haz <- ggplot(df_weib_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                  geom_line(linewidth = 1.25) +
-                  labs(title = "Weibull Hazard Function",
-                       x = "Time (proportion)", y = "Hazard Probability",
-                       color=expression(gamma), linetype=expression(gamma)) +
-                  theme_minimal() +
-                  theme(legend.position = c(0.5, 0.8),
-                        legend.background = element_rect(fill = "white", color = "black"),
-                        legend.direction="horizontal",
-                        legend.title = element_text(size=20),
-                        legend.key.size = unit(1.4,"line"),
-                        title = element_text(face="bold"),
-                        axis.title = element_text(face="plain")) +
-                  ylim(c(0, .005))
+p_weib_haz <- ggplot(df_weib_haz, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Weibull Hazard Function",
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1),
+               expression(gamma == 3))) +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1),
+                                   expression(gamma == 3))) +
+  coord_cartesian(ylim = c(0, .005)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.8),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
+p_mod_weib_haz <- ggplot(df_mod_weib_haz, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = expression("Modified Weibull Hazard Function with " * kappa == 2),
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1.5),
+                                   expression(gamma == 2))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1.5),
+               expression(gamma == 2))) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.8),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_mod_weib_haz <- ggplot(df_mod_weib_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                    geom_line(linewidth = 1.25) +
-                    labs(title = "Modified Weibull Hazard Function",
-                         subtitle = expression(kappa*" = 2"),
-                         x = "Time (proportion)", y = "Hazard Probability",
-                         color=expression(gamma), linetype=expression(gamma)) +
-                    theme_minimal() +
-                    theme(legend.position = c(0.5, 0.8),
-                          legend.direction="horizontal",
-                          legend.title = element_text(size=20),
-                          legend.background = element_rect(fill = "white", color = "black"),
-                          legend.key.size = unit(1.4,"line"),
-                          title = element_text(face="bold"),
-                          plot.subtitle = element_text(size=15),
-                          axis.title = element_text(face="plain"))
+p_mod_weib_haz2 <- ggplot(df_mod_weib_haz2, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = expression("Modified Weibull Hazard Function with " * kappa == 0.1),
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.5),
+                                   expression(gamma == 1.5),
+                                   expression(gamma == 2))) +
+  coord_cartesian(ylim = c(0, .004)) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.5),
+               expression(gamma == 1.5),
+               expression(gamma == 2))) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.8),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_mod_weib_haz2 <- ggplot(df_mod_weib_haz2, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                    geom_line(linewidth = 1.25) +
-                    labs(title = "Modified Weibull Hazard Function",
-                         subtitle = expression(kappa*" = 0.1"),
-                         x = "Time (proportion)", y = "Hazard Probability",
-                         color=expression(gamma), linetype=expression(gamma)) +
-                    theme_minimal() +
-                    theme(legend.position = c(0.5, 0.8),
-                          legend.direction="horizontal",
-                          legend.title = element_text(size=20),
-                          legend.background = element_rect(fill = "white", color = "black"),
-                          legend.key.size = unit(1.4,"line"),
-                          title = element_text(face="bold"),
-                          plot.subtitle = element_text(size=15),
-                          axis.title = element_text(face="plain")) +
-                    ylim(c(0, .004))
+p_log_haz <- ggplot(df_log_haz, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Log-Logistic Hazard Function",
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == 0.7),
+                                   expression(gamma == 1),
+                                   expression(gamma == 2))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == 0.7),
+               expression(gamma == 1),
+               expression(gamma == 2))) +
+  coord_cartesian(ylim = c(0, .005)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.8),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_log_haz <- ggplot(df_log_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-              geom_line(linewidth = 1.25) +
-              labs(title = "Log-Logistic Hazard Function",
-                   x = "Time (proportion)", y = "Hazard Probability",
-                   color=expression(gamma), linetype=expression(gamma)) +
-              theme_minimal() +
-              theme(legend.position = c(0.5, 0.8),
-                    legend.background = element_rect(fill = "white", color = "black"),
-                    legend.direction="horizontal",
-                    legend.title = element_text(size=20),
-                    legend.key.size = unit(1.4,"line"),
-                    title = element_text(face="bold"),
-                    axis.title = element_text(face="plain")) +
-              ylim(c(0,.005))
+p_lin_exp_haz <- ggplot(df_lin_exp_haz, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Linear-Exponential Hazard Function",
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == -0.9),
+                                   expression(gamma == 0),
+                                   expression(gamma == 0.9))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == -0.9),
+               expression(gamma == 0),
+               expression(gamma == 0.9))) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.1),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(.7, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_lin_exp_haz <- ggplot(df_lin_exp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                  geom_line(linewidth = 1.25) +
-                  labs(title = "Linear-Exponential Hazard Function",
-                       x = "Time (proportion)", y = "Hazard Probability",
-                       color=expression(gamma), linetype=expression(gamma)) +
-                  theme_minimal() +
-                  theme(legend.position = c(0.5, 0.09),
-                        legend.background = element_rect(fill = "white", color = "black"),
-                        legend.direction="horizontal",
-                        legend.title = element_text(size=20),
-                        legend.key.size = unit(1.4,"line"),
-                        title = element_text(face="bold"),
-                        axis.title = element_text(face="plain")                        ) 
+p_gomp_haz <- ggplot(df_gomp_haz, aes(x = time, y = survival, linetype = gamma, color = gamma)) +
+  geom_line(linewidth = 1) +
+  labs(title = "Gompertz Hazard Function",
+       x = "Time (Proportion)", y = "Hazard Probability") +
+  scale_linetype_manual(values = c("solid", "dashed", "dotdash"),
+                        labels = c(expression(gamma == -5),
+                                   expression(gamma == 0.5),
+                                   expression(gamma == 5))) +
+  scale_color_discrete(
+    labels = c(expression(gamma == -5),
+               expression(gamma == 0.5),
+               expression(gamma == 5))) +
+  coord_cartesian(ylim = c(0, .0075)) +
+  theme_bw(base_family = "sans", base_size = 9) +
+  theme(legend.position = c(0.5, 0.8),
+        legend.direction = "horizontal",
+        legend.title = element_blank(),
+        legend.text = element_text(size = 9),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(1, "cm"),
+        legend.box.background = element_blank(),
+        axis.title = element_text(size = 10),
+        axis.text = element_text(size = 9),
+        axis.text.y = element_text(angle = 0),
+        plot.title = element_text(
+          size = 12,
+          face = "plain",
+          hjust = 0.5
+        ),
+        panel.grid.minor = element_blank()
+  )
 
-p_gomp_haz <- ggplot(df_gomp_haz, aes(x = time, y = survival, color = gamma, linetype=gamma)) +
-                geom_line(linewidth = 1.25) +
-                labs(title = "Gompertz Hazard Function",
-                     x = "Time (proportion)", y = "Hazard Probability",
-                     color=expression(gamma), linetype=expression(gamma)) +
-                theme_minimal() +
-                theme(legend.position = c(0.5, 0.8),
-                      legend.background = element_rect(fill = "white", color = "black"),
-                      legend.direction="horizontal",
-                      legend.title = element_text(size=20),
-                      legend.key.size = unit(1.4,"line"),
-                      title = element_text(face="bold"),
-                      axis.title = element_text(face="plain")) +
-                ylim(0,.0075)
+# save plot as pdf
+cairo_pdf(
+  "./LosenerFig1.pdf",
+  width = 8,
+  height = 6
+)
 
-pdf("hazard_grid2.pdf", width = 8, height=12)
-  grid.arrange(p_weib_haz, p_mod_weib_haz, p_mod_weib_haz2, p_log_haz, p_lin_exp_haz, p_gomp_haz)
+grid.arrange(p_weib_haz, p_mod_weib_haz, p_mod_weib_haz2, p_log_haz, p_lin_exp_haz, p_gomp_haz)
+
 dev.off()
 
 
